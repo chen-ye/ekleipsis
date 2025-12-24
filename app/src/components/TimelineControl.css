@@ -1,0 +1,55 @@
+.timeline-control {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 800px;
+  background: rgba(25, 25, 25, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 1rem;
+  border-radius: 12px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 100;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #a1a1aa;
+}
+
+.timeline-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Slider Track */
+.timeline-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: #52525b;
+  border-radius: 3px;
+}
+
+/* Slider Thumb */
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  background: #fff;
+  border-radius: 50%;
+  margin-top: -6px; /* center on track */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.timeline-slider:focus {
+  outline: none;
+}

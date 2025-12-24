@@ -1,0 +1,117 @@
+.sidebar {
+  width: 360px;
+  background: rgba(20, 20, 28, 0.95);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  color: #e4e4e7;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  background: linear-gradient(to right, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sidebar-actions {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-actions input[type="text"] {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.sidebar-actions input[type="text"]:focus {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-actions button {
+  padding: 8px 16px;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.sidebar-actions button:hover {
+  opacity: 0.9;
+}
+
+.sidebar-actions button:active {
+  transform: scale(0.98);
+}
+
+.sidebar-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.poi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.poi-item {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.2s;
+}
+
+.poi-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.poi-item strong {
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+    color: #fff;
+}
+
+.poi-type {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.poi-item p {
+    font-size: 0.85rem;
+    color: #d4d4d8;
+    margin: 0;
+    line-height: 1.4;
+}
