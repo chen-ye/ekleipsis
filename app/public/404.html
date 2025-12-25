@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ekleipsis</title>
+  <script>
+    // Single Page App redirect for GitHub Pages
+    // Redirects all 404s to index.html for client-side routing
+    const path = window.location.pathname;
+    const repo = '/ekleipsis';
+    if (path.startsWith(repo)) {
+      const route = path.slice(repo.length);
+      sessionStorage.setItem('redirect', route);
+    }
+    window.location.replace(repo + '/');
+  </script>
+</head>
+<body>
+  Redirecting...
+</body>
+</html>
