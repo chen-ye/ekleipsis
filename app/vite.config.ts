@@ -5,5 +5,5 @@ import cesium from 'vite-plugin-cesium'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/ekleipsis/',
-  plugins: [react(), cesium()],
+  plugins: [react(), cesium({ rebuildCesium: true })],
 })
