@@ -1,6 +1,5 @@
-import { Flex, Box } from '@radix-ui/themes';
+import { Box } from '@radix-ui/themes';
 import GlobeView from './components/GlobeView';
-import Sidebar from './components/Sidebar';
 import { PoiProvider } from './contexts/PoiContext';
 import { useState } from 'react';
 import { Cartesian3 } from 'cesium';
@@ -13,15 +12,12 @@ function App() {
 
   return (
     <PoiProvider>
-      <Flex style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-        <Sidebar onPoiClick={setCameraDestination} />
-        <Box flexGrow="1" position="relative">
-          <GlobeView
-            cameraDestination={cameraDestination}
-            onFlyTo={setCameraDestination}
-          />
-        </Box>
-      </Flex>
+      <Box style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <GlobeView
+          cameraDestination={cameraDestination}
+          onFlyTo={setCameraDestination}
+        />
+      </Box>
     </PoiProvider>
   );
 }
