@@ -1,6 +1,6 @@
 import { kml, gpx as toGeoJsonGpx } from '@tmcw/togeojson';
 import GpxParser from 'gpxparser'; // We might use gpxparser for more stats, or just togeojson
-import { Poi, GeoLocation } from '../types/poi';
+import type { Poi, GeoLocation } from '../types/poi';
 
 // Helper to parse file
 export async function parseFile(file: File): Promise<Pick<Poi, 'name' | 'type' | 'location' | 'path' | 'description'>[]> {

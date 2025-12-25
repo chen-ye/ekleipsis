@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Poi } from '../types/poi';
+import type { Poi } from '../types/poi';
 import { PoiService } from '../services/poiService';
 
 interface PoiContextType {

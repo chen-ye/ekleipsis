@@ -9,7 +9,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Poi } from '../types/poi';
+import type { Poi } from '../types/poi';
 
 const COLLECTION_NAME = 'pois';
 
