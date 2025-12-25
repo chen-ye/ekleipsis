@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { usePoi } from '../contexts/PoiContext';
 import { parseFile } from '../utils/fileParser';
-import './Sidebar.css';
+import { Flex, Box, Heading, TextField, Button, Card, Text, Badge } from '@radix-ui/themes';
 
 export default function Sidebar() {
   const { pois, addPoi, loading } = usePoi();
@@ -61,29 +61,35 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <h1>Ekleipsis</h1>
-      </div>
+    <Flex direction="column" style={{
+        width: '360px',
+        height: '100%',
+        borderRight: '1px solid var(--gray-5)',
+        backgroundColor: 'var(--color-panel-solid)',
+        zIndex: 10
+    }}>
+      <Box p="4" style={{ borderBottom: '1px solid var(--gray-5)' }}>
+        <Heading size="4">Ekleipsis</Heading>
+      </Box>
 
-      <div className="sidebar-actions">
-        <div style={{ marginBottom: '10px', display: 'flex', gap: '5px' }}>
-             <input
-                type="text"
-                placeholder="Search place..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                style={{ flex: 1, padding: '4px' }}
-             />
-             <button onClick={handleSearch} disabled={searching} style={{ width: 'auto' }}>
+      <Flex direction="column" gap="3" p="4" style={{ borderBottom: '1px solid var(--gray-5)' }}>
+        <Flex gap="2">
+             <Box flexGrow="1">
+                <TextField.Root
+                    placeholder="Search place..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+             </Box>
+             <Button onClick={handleSearch} disabled={searching} variant="solid">
                 {searching ? '...' : 'Add'}
-             </button>
-        </div>
+             </Button>
+        </Flex>
 
-        <button onClick={() => fileInputRef.current?.click()}>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
           Import POI/GPX
-        </button>
+        </Button>
         <input
           type="file"
           ref={fileInputRef}
@@ -92,24 +98,28 @@ export default function Sidebar() {
           multiple
           onChange={handleFileUpload}
         />
-      </div>
+      </Flex>
 
-      <div className="sidebar-content">
+      <Box flexGrow="1" p="4" style={{ overflowY: 'auto' }}>
         {loading ? (
-            <p>Loading POIs...</p>
+            <Text color="gray">Loading POIs...</Text>
         ) : (
-            <div className="poi-list">
-                {pois.length === 0 && <p>No POIs yet. Import or add some!</p>}
+            <Flex direction="column" gap="3">
+                {pois.length === 0 && <Text color="gray" size="2">No POIs yet. Import or add some!</Text>}
                 {pois.map(poi => (
-                    <div key={poi.id} className="poi-item">
-                        <strong>{poi.name}</strong>
-                        <span className="poi-type">{poi.type}</span>
-                        {poi.description && <p>{poi.description}</p>}
-                    </div>
+                    <Card key={poi.id}>
+                        <Flex direction="column" gap="1">
+                            <Text weight="bold" size="3">{poi.name}</Text>
+                            <Badge color="gray" variant="surface" style={{ width: 'fit-content' }}>
+                                {poi.type}
+                            </Badge>
+                            {poi.description && <Text size="2" color="gray">{poi.description}</Text>}
+                        </Flex>
+                    </Card>
                 ))}
-            </div>
+            </Flex>
         )}
-      </div>
-    </aside>
+      </Box>
+    </Flex>
   );
 }

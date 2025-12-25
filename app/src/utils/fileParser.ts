@@ -1,5 +1,4 @@
 import { kml, gpx as toGeoJsonGpx } from '@tmcw/togeojson';
-import GpxParser from 'gpxparser'; // We might use gpxparser for more stats, or just togeojson
 import type { Poi, GeoLocation } from '../types/poi';
 
 // Helper to parse file

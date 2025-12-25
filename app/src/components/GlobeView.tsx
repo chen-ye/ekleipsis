@@ -6,12 +6,10 @@ import {
   Moon,
   Globe,
   Clock,
-  Cesium3DTilesTerrainProvider,
   Cesium3DTileset
 } from 'resium';
 import {
   Cartesian3,
-  Viewer as CesiumViewer,
   JulianDate,
   Ion,
   ShadowMode,
@@ -19,7 +17,7 @@ import {
   ClockStep,
   IonResource
 } from 'cesium';
-import { useState } from 'react';
+// import { useState } from 'react';
 import TimelineControl from './TimelineControl';
 import PoiLayer from './PoiLayer';
 
@@ -35,8 +33,6 @@ if (CESIUM_ION_ACCESS_TOKEN) {
 }
 
 function GlobeView() {
-  const [viewer, setViewer] = useState<CesiumViewer | null>(null);
-
   // We rely on the Cesium3DTilesTerrainProvider component directly now.
   // We can track readiness if we attach an onReady ref or similar, but for now we trust it loads.
 
@@ -59,9 +55,6 @@ function GlobeView() {
 
       <Viewer
         full
-        ref={(e) => {
-            if (e && e.cesiumElement) setViewer(e.cesiumElement);
-        }}
         timeline={true}
         animation={false}
         baseLayerPicker={true}

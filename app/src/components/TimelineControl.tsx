@@ -1,7 +1,7 @@
 import { useCesium } from 'resium';
-import { JulianDate, ClockRange, ClockStep } from 'cesium';
+import { JulianDate } from 'cesium';
 import { useEffect, useState, useCallback } from 'react';
-import './TimelineControl.css';
+import { Card, Flex, Text, Slider } from '@radix-ui/themes';
 
 // Fixed date for the eclipse: Aug 12, 2026
 // Range: 16:00 UTC to 20:00 UTC (Partial start to end approx for Mallorca)
@@ -34,9 +34,8 @@ export default function TimelineControl() {
     };
   }, [viewer]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleValueChange = useCallback((val: number) => {
     if (!viewer) return;
-    const val = parseFloat(e.target.value);
     setProgress(val);
 
     // Set clock time
@@ -48,21 +47,29 @@ export default function TimelineControl() {
   if (!viewer) return null;
 
   return (
-    <div className="timeline-control">
-      <div className="timeline-info">
-        <span>18:00 Local</span>
-        <span>Eclipse Phase</span>
-        <span>22:00 Local</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={1}
-        step={0.001}
-        value={progress}
-        onChange={handleChange}
-        className="timeline-slider"
-      />
-    </div>
+    <Card style={{
+        position: 'absolute',
+        bottom: '30px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '80%',
+        maxWidth: '800px',
+        zIndex: 100
+    }}>
+      <Flex direction="column" gap="4">
+        <Flex justify="between">
+            <Text size="2" color="gray">18:00 Local</Text>
+            <Text size="2" weight="bold">Eclipse Phase</Text>
+            <Text size="2" color="gray">22:00 Local</Text>
+        </Flex>
+        <Slider
+            min={0}
+            max={1}
+            step={0.001}
+            value={[progress]}
+            onValueChange={(vals) => handleValueChange(vals[0])}
+        />
+      </Flex>
+    </Card>
   );
 }

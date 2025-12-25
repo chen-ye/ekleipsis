@@ -1,17 +1,17 @@
+import { Flex, Box } from '@radix-ui/themes';
 import GlobeView from './components/GlobeView';
 import Sidebar from './components/Sidebar';
-import './App.css';
 import { PoiProvider } from './contexts/PoiContext';
 
 function App() {
   return (
     <PoiProvider>
-      <div className="app-container">
+      <Flex style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
         <Sidebar />
-        <main className="globe-container">
+        <Box flexGrow="1" position="relative">
           <GlobeView />
-        </main>
-      </div>
+        </Box>
+      </Flex>
     </PoiProvider>
   );
 }
