@@ -1,48 +1,61 @@
 import { useCesium } from 'resium';
 import { JulianDate } from 'cesium';
-import { useEffect, useState, useCallback } from 'react';
-import { Card, Flex, Text, Slider } from '@radix-ui/themes';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Card } from '@radix-ui/themes';
+import { AreaClosed, Line, Bar } from '@visx/shape';
+import { scaleTime, scaleLinear } from '@visx/scale';
+import { curveMonotoneX } from '@visx/curve';
+import { ParentSize } from '@visx/responsive';
+import { LinearGradient } from '@visx/gradient';
+import { AxisBottom } from '@visx/axis';
+import { localPoint } from '@visx/event';
 
-// Fixed date for the eclipse: Aug 12, 2026
-// Range: 16:00 UTC to 20:00 UTC (Partial start to end approx for Mallorca)
-// Actually, let's give a wider range: 12:00 UTC to 22:00 UTC
-const START_TIME_ISO = '2026-08-12T16:00:00Z';
-const END_TIME_ISO = '2026-08-12T20:00:00Z';
+export interface DataPoint {
+  date: Date;
+  coverage: number;
+}
 
-const START_JD = JulianDate.fromIso8601(START_TIME_ISO);
-const END_JD = JulianDate.fromIso8601(END_TIME_ISO);
-const DURATION_SECONDS = JulianDate.secondsDifference(END_JD, START_JD);
+interface TimelineControlProps {
+    startTime: Date;
+    endTime: Date;
+    totalityStartTime?: Date;
+    totalityEndTime?: Date;
+    data: DataPoint[];
+}
 
-export default function TimelineControl() {
+export default function TimelineControl({ startTime, endTime, totalityStartTime, totalityEndTime, data }: TimelineControlProps) {
   const { viewer } = useCesium();
-  const [progress, setProgress] = useState(0.5); // 0 to 1
+  const [currentTime, setCurrentTime] = useState<Date>(startTime);
+  const [isDragging, setIsDragging] = useState(false);
 
-  // Update slider when clock ticks (if playing)
+  // Sync state with Cesium clock
   useEffect(() => {
     if (!viewer) return;
 
     const onTick = () => {
-      const current = viewer.clock.currentTime;
-      const diff = JulianDate.secondsDifference(current, START_JD);
-      const newProgress = Math.max(0, Math.min(1, diff / DURATION_SECONDS));
-      setProgress(newProgress);
+      // If dragging, we don't update from clock to avoid fighting
+      if (isDragging) return;
+
+      const currentJD = viewer.clock.currentTime;
+      // Convert JulianDate to JS Date
+      // This is a bit approximate but fine for UI
+      const jsDate = JulianDate.toDate(currentJD);
+      setCurrentTime(jsDate);
     };
 
     viewer.clock.onTick.addEventListener(onTick);
     return () => {
       viewer.clock.onTick.removeEventListener(onTick);
     };
+  }, [viewer, isDragging]);
+
+  const setClockTime = useCallback((time: Date) => {
+      if (!viewer) return;
+      const jd = JulianDate.fromDate(time);
+      viewer.clock.currentTime = jd;
+      setCurrentTime(time);
   }, [viewer]);
 
-  const handleValueChange = useCallback((val: number) => {
-    if (!viewer) return;
-    setProgress(val);
-
-    // Set clock time
-    const seconds = val * DURATION_SECONDS;
-    const newDate = JulianDate.addSeconds(START_JD, seconds, new JulianDate());
-    viewer.clock.currentTime = newDate;
-  }, [viewer]);
 
   if (!viewer) return null;
 
@@ -52,24 +65,207 @@ export default function TimelineControl() {
         bottom: '30px',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '80%',
-        maxWidth: '800px',
-        zIndex: 100
+        width: '90%',
+        maxWidth: '900px',
+        zIndex: 100,
+        overflow: 'visible',
+        padding: 0,
+        backgroundColor: 'var(--black-a6)', // Radix translucent panel
+        backdropFilter: 'blur(10px)', // Enhance glass effect
     }}>
-      <Flex direction="column" gap="4">
-        <Flex justify="between">
-            <Text size="2" color="gray">18:00 Local</Text>
-            <Text size="2" weight="bold">Eclipse Phase</Text>
-            <Text size="2" color="gray">22:00 Local</Text>
-        </Flex>
-        <Slider
-            min={0}
-            max={1}
-            step={0.001}
-            value={[progress]}
-            onValueChange={(vals) => handleValueChange(vals[0])}
-        />
-      </Flex>
+        <div style={{ height: '140px', width: '100%', position: 'relative' }}>
+           <ParentSize>
+             {({ width, height }) => (
+                 <EclipseGraph
+                    width={width}
+                    height={height}
+                    data={data}
+                    currentTime={currentTime}
+                    startTime={startTime}
+                    endTime={endTime}
+                    totalityStartTime={totalityStartTime}
+                    totalityEndTime={totalityEndTime}
+                    onTimeChange={(t) => {
+                        setClockTime(t);
+                    }}
+                    onDragStateChange={setIsDragging}
+                 />
+             )}
+           </ParentSize>
+        </div>
     </Card>
   );
+}
+
+interface EclipseGraphProps {
+    width: number;
+    height: number;
+    data: DataPoint[];
+    currentTime: Date;
+    startTime: Date;
+    endTime: Date;
+    totalityStartTime?: Date;
+    totalityEndTime?: Date;
+    onTimeChange: (time: Date) => void;
+    onDragStateChange: (isDragging: boolean) => void;
+}
+
+function EclipseGraph({ width, height, data, currentTime, startTime, endTime, totalityStartTime, totalityEndTime, onTimeChange, onDragStateChange }: EclipseGraphProps) {
+    if (width < 10) return null;
+
+    const margin = { top: 20, bottom: 30, left: 0, right: 0 };
+    const xMax = width;
+    const yMax = height - margin.bottom;
+
+    const maxCoverage = Math.max(...data.map(d => d.coverage));
+
+    const xScale = useMemo(() => scaleTime({
+        domain: [startTime, endTime],
+        range: [margin.left, xMax - margin.right],
+    }), [startTime, endTime, xMax, margin.left, margin.right]);
+
+    const yScale = useMemo(() => scaleLinear({
+        domain: [0, maxCoverage || 1],
+        range: [yMax, margin.top],
+    }), [maxCoverage, yMax, margin.top]);
+
+    const handlePointer = useCallback((event: React.PointerEvent) => {
+        const { x } = localPoint(event) || { x: 0 };
+        // Clamp x to range
+        const clampedX = Math.min(Math.max(x, margin.left), xMax - margin.right);
+        const newDate = xScale.invert(clampedX);
+        onTimeChange(newDate);
+    }, [xScale, margin.left, xMax, margin.right, onTimeChange]);
+
+    const currentX = xScale(currentTime) ?? margin.left;
+    // Clamp currentX for display safety
+    const displayX = Math.min(Math.max(currentX, margin.left), xMax - margin.right);
+
+    // Format time for label
+    const timeLabel = currentTime.toLocaleTimeString([], { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    // CSS Variable access helpers
+    const axisColor = 'var(--gray-a6)';
+    const playheadColor = 'var(--gray-a10)';
+    const axisTextColor = 'var(--gray-11)';
+    const overlayBg = 'var(--gray-a4)';
+    const overlayBorder = 'var(--gray-a4)';
+
+    return (
+        <div style={{ position: 'relative', width, height }}>
+            <svg
+                width={width}
+                height={height}
+                style={{ overflow: 'visible', touchAction: 'none' }}
+                onPointerDown={(e) => {
+                    (e.target as Element).setPointerCapture(e.pointerId);
+                    onDragStateChange(true);
+                    handlePointer(e);
+                }}
+                onPointerMove={(e) => {
+                    if (e.buttons > 0) {
+                        handlePointer(e);
+                    }
+                }}
+                onPointerUp={(e) => {
+                    (e.target as Element).releasePointerCapture(e.pointerId);
+                    onDragStateChange(false);
+                }}
+            >
+                {/* Define gradient using CSS vars */}
+                <LinearGradient id="eclipse-gradient" from="var(--amber-1)" to="var(--amber-9)" toOpacity={0.1} fromOpacity={0.6} />
+                <LinearGradient id="totality-gradient" from="var(--black-12)" to="var(--black-11)" toOpacity={0.5} fromOpacity={0.1} />
+
+                {/* Background Data Graph */}
+                <AreaClosed<DataPoint>
+                    data={data}
+                    x={d => xScale(d.date) ?? 0}
+                    y={d => yScale(d.coverage) ?? 0}
+                    yScale={yScale}
+                    strokeWidth={2}
+                    stroke="url(#eclipse-gradient)"
+                    fill="url(#eclipse-gradient)"
+                    curve={curveMonotoneX}
+                />
+
+                {/* Totality Band (Rendered ON TOP of AreaClosed to show "special black area") */}
+                {totalityStartTime && totalityEndTime && (
+                     <Bar
+                        x={xScale(totalityStartTime) ?? 0}
+                        y={margin.top}
+                        width={Math.max(1, (xScale(totalityEndTime) ?? 0) - (xScale(totalityStartTime) ?? 0))}
+                        height={yMax - margin.top}
+                        fill="url(#totality-gradient)"
+                     />
+                )}
+
+                {/* Axis */}
+                <AxisBottom
+                    scale={xScale}
+                    top={yMax}
+                    stroke={axisColor}
+                    tickStroke={axisColor}
+                    tickLabelProps={() => ({
+                        fill: axisTextColor,
+                        fontSize: 10,
+                        textAnchor: 'middle',
+                        fontFamily: 'var(--default-font-family)',
+                    })}
+                    tickFormat={(val) => {
+                        if (val instanceof Date) {
+                            return val.toLocaleTimeString([], { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' });
+                        }
+                        return "";
+                    }}
+                />
+
+                {/* Playhead Line */}
+                <Line
+                    from={{ x: displayX, y: margin.top }}
+                    to={{ x: displayX, y: yMax }}
+                    stroke={playheadColor}
+                    strokeWidth={1}
+                    pointerEvents="none"
+                    strokeDasharray="4 4"
+                />
+
+                {/* Interactive Overlay */}
+                <Bar
+                    x={margin.left}
+                    y={0}
+                    width={Math.max(0, xMax - margin.left - margin.right)}
+                    height={height}
+                    fill="transparent"
+                    rx={14}
+                />
+            </svg>
+
+            {/* Glassmorphic Time Scrim Overlaying Axis */}
+            <div style={{
+                position: 'absolute',
+                left: displayX - 40, // Center horizontally
+                top: yMax - 12, // Center vertically on axis
+                width: '80px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: overlayBg,
+                backdropFilter: 'blur(8px)',
+                borderRadius: '12px',
+                border: `1px solid ${overlayBorder}`,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                color: 'var(--gray-12)',
+                fontSize: '11px',
+                fontWeight: 400,
+                fontFamily: 'var(--default-font-family)',
+                textBoxTrim: 'trim-both',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                zIndex: 10
+            }}>
+                {timeLabel}
+            </div>
+        </div>
+    );
 }

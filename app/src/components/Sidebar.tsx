@@ -2,8 +2,13 @@ import { useRef, useState } from 'react';
 import { usePoi } from '../contexts/PoiContext';
 import { parseFile } from '../utils/fileParser';
 import { Flex, Box, Heading, TextField, Button, Card, Text, Badge } from '@radix-ui/themes';
+import { Cartesian3 } from 'cesium';
 
-export default function Sidebar() {
+interface SidebarProps {
+    onPoiClick?: (destination: Cartesian3) => void;
+}
+
+export default function Sidebar({ onPoiClick }: SidebarProps) {
   const { pois, addPoi, loading } = usePoi();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +65,19 @@ export default function Sidebar() {
     }
   };
 
+  const handlePoiCardClick = (poi: any) => {
+    if (!onPoiClick) return;
+
+    let destination: Cartesian3;
+    if (poi.type === 'track' && poi.path && poi.path.length > 0) {
+        const start = poi.path[0];
+        destination = Cartesian3.fromDegrees(start.lng, start.lat, start.alt || 2000);
+    } else {
+        destination = Cartesian3.fromDegrees(poi.location.lng, poi.location.lat, poi.location.alt || 500);
+    }
+    onPoiClick(destination);
+  };
+
   return (
     <Flex direction="column" style={{
         width: '360px',
@@ -107,7 +125,7 @@ export default function Sidebar() {
             <Flex direction="column" gap="3">
                 {pois.length === 0 && <Text color="gray" size="2">No POIs yet. Import or add some!</Text>}
                 {pois.map(poi => (
-                    <Card key={poi.id}>
+                    <Card key={poi.id} onClick={() => handlePoiCardClick(poi)} style={{ cursor: 'pointer' }}>
                         <Flex direction="column" gap="1">
                             <Text weight="bold" size="3">{poi.name}</Text>
                             <Badge color="gray" variant="surface" style={{ width: 'fit-content' }}>

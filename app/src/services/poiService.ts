@@ -22,6 +22,7 @@ export const PoiService = {
     }
 
     const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+
     return onSnapshot(q, (snapshot) => {
       const pois = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Poi));
       callback(pois);
@@ -31,7 +32,10 @@ export const PoiService = {
   },
 
   addPoi: async (poi: Omit<Poi, 'id'>) => {
-    if (!db) return;
+    if (!db) {
+        console.error("Cannot add POI: DB not initialized");
+        return;
+    }
     try {
       await addDoc(collection(db, COLLECTION_NAME), poi);
     } catch (e) {

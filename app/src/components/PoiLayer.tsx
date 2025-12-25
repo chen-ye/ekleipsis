@@ -2,7 +2,7 @@ import { Entity, PolylineGraphics } from 'resium';
 import { Cartesian3, Color, HeightReference } from 'cesium';
 import { usePoi } from '../contexts/PoiContext';
 
-export default function PoiLayer() {
+export default function PoiLayer({ onPoiClick }: { onPoiClick?: (position: Cartesian3) => void }) {
   const { pois } = usePoi();
 
   if (!pois || pois.length === 0) return null;
@@ -18,8 +18,14 @@ export default function PoiLayer() {
 
         if (poi.type === 'track' && poi.path) {
            const positions = poi.path.map(p => Cartesian3.fromDegrees(p.lng, p.lat, p.alt || 0));
+           const clickPosition = positions[0]; // Fly to start of track
            return (
-             <Entity key={poi.id} name={poi.name} description={poi.description}>
+             <Entity
+               key={poi.id}
+               name={poi.name}
+               description={poi.description}
+               onClick={() => onPoiClick?.(clickPosition)}
+             >
                <PolylineGraphics
                  positions={positions}
                  width={4}
@@ -52,8 +58,10 @@ export default function PoiLayer() {
               color: color,
               outlineColor: Color.WHITE,
               outlineWidth: 2,
-              heightReference: HeightReference.CLAMP_TO_GROUND
+              heightReference: HeightReference.CLAMP_TO_3D_TILE,
+              disableDepthTestDistance: Number.POSITIVE_INFINITY
             }}
+            onClick={() => onPoiClick?.(position)}
           />
         );
       })}

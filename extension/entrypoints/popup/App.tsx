@@ -1,34 +1,29 @@
-import { useState } from 'react';
-import reactLogo from '@/assets/react.svg';
-import wxtLogo from '/wxt.svg';
-import './App.css';
+import { Flex, Heading, Button, Container } from '@radix-ui/themes';
+import { PlusIcon } from '@radix-ui/react-icons';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const handleExtract = async () => {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+       try {
+           await browser.tabs.sendMessage(tab.id, { action: 'EXTRACT_POI' });
+           window.close();
+       } catch (e) {
+           console.error("Failed to send message:", e);
+           alert("Could not trigger extraction. Refresh the page and try again.");
+       }
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://wxt.dev" target="_blank">
-          <img src={wxtLogo} className="logo" alt="WXT logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>WXT + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the WXT and React logos to learn more
-      </p>
-    </>
+    <Container size="1" p="4" style={{ width: 240 }}>
+        <Flex direction="column" gap="4" align="center">
+            <Heading size="3" align="center">Ekleipsis Extractor</Heading>
+            <Button onClick={handleExtract} size="3" style={{ width: '100%' }}>
+                <PlusIcon /> Add to Ekleipsis
+            </Button>
+        </Flex>
+    </Container>
   );
 }
 
