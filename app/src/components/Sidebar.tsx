@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { usePoi } from '../contexts/PoiContext';
 import { parseFile } from '../utils/fileParser';
-import { Flex, Box, Heading, TextField, Button, Card, Text, Badge, Avatar, DropdownMenu } from '@radix-ui/themes';
+import { Flex, Box, Heading, TextField, Button, Card, Text, Badge, Avatar, DropdownMenu, IconButton, Dialog, AlertDialog } from '@radix-ui/themes';
+import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons';
 import { Cartesian3 } from 'cesium';
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
@@ -11,11 +12,12 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onPoiClick }: SidebarProps) {
-  const { pois, addPoi, loading } = usePoi();
+  const { pois, addPoi, updatePoi, deletePoi, loading } = usePoi();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [editingPoi, setEditingPoi] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -175,13 +177,64 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
             <Flex direction="column" gap="3">
                 {pois.length === 0 && <Text color="gray" size="2">No POIs yet. Import or add some!</Text>}
                 {pois.map(poi => (
-                    <Card key={poi.id} onClick={() => handlePoiCardClick(poi)} style={{ cursor: 'pointer' }}>
-                        <Flex direction="column" gap="1">
-                            <Text weight="bold" size="3">{poi.name}</Text>
-                            <Badge color="gray" variant="surface" style={{ width: 'fit-content' }}>
-                                {poi.type}
-                            </Badge>
-                            {poi.description && <Text size="2" color="gray">{poi.description}</Text>}
+                    <Card key={poi.id} style={{ cursor: 'pointer' }}>
+                        <Flex justify="between" align="start" gap="2">
+                            <Box flexGrow="1" onClick={() => handlePoiCardClick(poi)}>
+                                <Flex direction="column" gap="1">
+                                    <Text weight="bold" size="3">{poi.name}</Text>
+                                    <Badge color="gray" variant="surface" style={{ width: 'fit-content' }}>
+                                        {poi.type}
+                                    </Badge>
+                                    {poi.description && <Text size="2" color="gray">{poi.description}</Text>}
+                                </Flex>
+                            </Box>
+                            {user && (
+                                <Flex gap="3">
+                                    <Dialog.Root open={editingPoi?.id === poi.id} onOpenChange={(open) => !open && setEditingPoi(null)}>
+                                        <Dialog.Trigger>
+                                            <IconButton size="1" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditingPoi({ id: poi.id, name: poi.name }); }}>
+                                                <Pencil1Icon />
+                                            </IconButton>
+                                        </Dialog.Trigger>
+                                        <Dialog.Content maxWidth="400px">
+                                            <Dialog.Title>Rename POI</Dialog.Title>
+                                            <Dialog.Description size="2" mb="4">Enter a new name for this POI.</Dialog.Description>
+                                            <TextField.Root
+                                                value={editingPoi?.name || ''}
+                                                onChange={(e) => setEditingPoi(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                            />
+                                            <Flex gap="3" mt="4" justify="end">
+                                                <Dialog.Close>
+                                                    <Button variant="soft" color="gray">Cancel</Button>
+                                                </Dialog.Close>
+                                                <Dialog.Close>
+                                                    <Button onClick={() => editingPoi && updatePoi(editingPoi.id, { name: editingPoi.name })}>Save</Button>
+                                                </Dialog.Close>
+                                            </Flex>
+                                        </Dialog.Content>
+                                    </Dialog.Root>
+
+                                    <AlertDialog.Root>
+                                        <AlertDialog.Trigger>
+                                            <IconButton size="1" variant="ghost" color="red" onClick={(e) => e.stopPropagation()}>
+                                                <TrashIcon />
+                                            </IconButton>
+                                        </AlertDialog.Trigger>
+                                        <AlertDialog.Content maxWidth="400px">
+                                            <AlertDialog.Title>Delete POI</AlertDialog.Title>
+                                            <AlertDialog.Description size="2">Are you sure you want to delete "{poi.name}"?</AlertDialog.Description>
+                                            <Flex gap="3" mt="4" justify="end">
+                                                <AlertDialog.Cancel>
+                                                    <Button variant="soft" color="gray">Cancel</Button>
+                                                </AlertDialog.Cancel>
+                                                <AlertDialog.Action>
+                                                    <Button color="red" onClick={() => deletePoi(poi.id)}>Delete</Button>
+                                                </AlertDialog.Action>
+                                            </Flex>
+                                        </AlertDialog.Content>
+                                    </AlertDialog.Root>
+                                </Flex>
+                            )}
                         </Flex>
                     </Card>
                 ))}

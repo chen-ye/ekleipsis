@@ -5,6 +5,7 @@ import { PoiService } from '../services/poiService';
 interface PoiContextType {
   pois: Poi[];
   addPoi: (poi: Omit<Poi, 'id'>) => Promise<void>;
+  updatePoi: (id: string, updates: Partial<Omit<Poi, 'id'>>) => Promise<void>;
   deletePoi: (id: string) => Promise<void>;
   loading: boolean;
 }
@@ -31,8 +32,12 @@ export const PoiProvider = ({ children }: { children: ReactNode }) => {
     await PoiService.deletePoi(id);
   };
 
+  const updatePoi = async (id: string, updates: Partial<Omit<Poi, 'id'>>) => {
+    await PoiService.updatePoi(id, updates);
+  };
+
   return (
-    <PoiContext.Provider value={{ pois, addPoi, deletePoi, loading }}>
+    <PoiContext.Provider value={{ pois, addPoi, updatePoi, deletePoi, loading }}>
       {children}
     </PoiContext.Provider>
   );

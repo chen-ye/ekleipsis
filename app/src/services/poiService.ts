@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   deleteDoc,
+  updateDoc,
   doc,
   query,
   orderBy,
@@ -67,6 +68,21 @@ export const PoiService = {
     } catch (e) {
       console.error("Error deleting POI: ", e);
       alert("Error deleting POI (Permission Denied?)");
+    }
+  },
+
+  updatePoi: async (id: string, updates: Partial<Omit<Poi, 'id'>>) => {
+    if (!db) return;
+    if (!auth.currentUser) {
+        console.warn("Cannot update POI: User not authenticated");
+        alert("Please login to update POIs");
+        return;
+    }
+    try {
+      await updateDoc(doc(db, COLLECTION_NAME, id), updates);
+    } catch (e) {
+      console.error("Error updating POI: ", e);
+      alert("Error updating POI (Permission Denied?)");
     }
   }
 };
