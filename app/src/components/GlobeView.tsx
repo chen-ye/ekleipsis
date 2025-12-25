@@ -1,6 +1,5 @@
 import {
   Viewer,
-  CameraFlyTo,
   Sun,
   SkyAtmosphere,
   Moon,
@@ -9,6 +8,7 @@ import {
   Cesium3DTileset,
   ShadowMap,
   Scene,
+  ImageryLayer,
 } from 'resium';
 import {
   Cartesian3,
@@ -22,13 +22,18 @@ import {
   IonResource,
   Terrain,
   CesiumTerrainProvider,
-  ImageBasedLighting,
   Cartesian2,
+  Cartographic,
+  Math as CesiumMath,
+  Transforms,
+  Matrix4,
+  UrlTemplateImageryProvider,
 } from 'cesium';
 import { useState, useMemo, useEffect } from 'react';
 import TimelineControl from './TimelineControl';
 import PoiLayer from './PoiLayer';
-import { calculateEclipseCoverage, getEclipseTiming } from '../utils/eclipseCalculator';
+import { SegmentedControl, Switch, Flex, Text, Box } from '@radix-ui/themes';
+import { calculateEclipseCoverage, getEclipseTiming, getSunPosition } from '../utils/eclipseCalculator';
 import { ECLIPSE_DATE_BASE, MALLORCA_LAT, MALLORCA_LNG } from '../constants/eclipse';
 
 // Default to Mallorca
@@ -52,6 +57,8 @@ interface GlobeViewProps {
 
 function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
   const [viewer, setViewer] = useState<CesiumViewer | null>(null);
+  const [show3DTiles, setShow3DTiles] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // Compute eclipse timing dynamically based on Mallorca location
   const eclipseTiming = useMemo(() => {
@@ -91,6 +98,77 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
     }
     return points;
   }, [eclipseTiming]);
+
+  // Calculate "Over the Shoulder" view:
+  // Camera positioned behind the POI, looking towards the POI and the Sun.
+  const flyToState = useMemo(() => {
+     if (!eclipseTiming || !cameraDestination) return undefined;
+
+     // 1. Get Lat/Lng of destination (POI)
+     const cartographic = Cartographic.fromCartesian(cameraDestination);
+     const lat = CesiumMath.toDegrees(cartographic.latitude);
+     const lng = CesiumMath.toDegrees(cartographic.longitude);
+
+     // 2. Get Sun Position at peak time
+     const sunPos = getSunPosition(eclipseTiming.peakTime, lat, lng, 0);
+     const sunAzRad = CesiumMath.toRadians(sunPos.azimuth);
+
+     // 3. Calculate Camera Offset
+     // We want to be "behind" the POI relative to the Sun.
+     // So we move in the direction opposite to Sun Azimuth.
+     const range = 3000; // 3km back
+     const heightOffset = 1000; // 1km up
+
+     // ENU: +x is East, +y is North.
+     // Azimuth 0 is North (+y). 90 is East (+x).
+     // Target Direction (Sun) = Az.
+     // Backwards Direction = Az + PI.
+     const offsetX = range * Math.sin(sunAzRad + Math.PI);
+     const offsetY = range * Math.cos(sunAzRad + Math.PI);
+     const offsetZ = heightOffset;
+
+     // 4. Transform Local Offset to World Coordinates
+     const enuMatrix = Transforms.eastNorthUpToFixedFrame(cameraDestination);
+     const offset = new Cartesian3(offsetX, offsetY, offsetZ);
+     const finalDest = new Cartesian3();
+     Matrix4.multiplyByPoint(enuMatrix, offset, finalDest);
+
+     // 5. Orientation
+     // Heading: Look at Sun (sunAzRad)
+     // Pitch: Look somewhat down to see POI context (-20 deg)
+     return {
+         destination: finalDest,
+         orientation: {
+             heading: sunAzRad,
+             pitch: CesiumMath.toRadians(-20),
+             roll: 0
+         }
+     };
+  }, [cameraDestination, eclipseTiming]);
+
+  // Memoize providers to prevent reloading on re-renders
+  const terrainProvider = useMemo(() => CesiumTerrainProvider.fromIonAssetId(1), []);
+
+  const heatmapProvider = useMemo(() => new UrlTemplateImageryProvider({
+      url: 'https://strava-heatmap-proxy.cye.workers.dev/global/orange/all/{z}/{x}/{y}@2x.png',
+      enablePickFeatures: false
+  }), []);
+
+  const tilesetUrl = useMemo(() => IonResource.fromAssetId(2275207), []);
+
+  // Imperative FlyTo to prevent resets on re-render (e.g. terrain toggle)
+  useEffect(() => {
+    if (!viewer || !cameraDestination) return;
+
+    const target = flyToState?.destination ?? cameraDestination;
+    const orientation = flyToState?.orientation;
+
+    viewer.camera.flyTo({
+        destination: target,
+        orientation: orientation,
+        duration: 2
+    });
+  }, [viewer, cameraDestination, flyToState]);
 
   useEffect(() => {
     if (!viewer || !startJD || !endJD) return;
@@ -176,8 +254,43 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
         </div>
       )}
 
+
+      <div style={{
+          position: 'absolute',
+          top: 20,
+          left: 20,
+          zIndex: 100,
+      }}>
+          <SegmentedControl.Root
+            value={show3DTiles ? 'google' : 'cesium'}
+            onValueChange={(val) => setShow3DTiles(val === 'google')}
+            radius="full"
+            size="2"
+            style={{
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <SegmentedControl.Item value="google">Google 3D</SegmentedControl.Item>
+            <SegmentedControl.Item value="cesium">Cesium World</SegmentedControl.Item>
+          </SegmentedControl.Root>
+
+          <Box mt="2" style={{
+              background: 'var(--color-panel-translucent)',
+              padding: '8px 12px',
+              borderRadius: 'var(--radius-3)',
+              border: '1px solid var(--gray-a4)',
+              backdropFilter: 'blur(10px)',
+          }}>
+              <Flex gap="2" align="center">
+                  <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} size="1" />
+                  <Text size="2" color="gray" highContrast>Strava Heatmap</Text>
+              </Flex>
+          </Box>
+      </div>
+
       <Viewer
         full
+        fullscreenButton={false}
         ref={(e) => {
             if (e && e.cesiumElement) {
                 const viewer = e.cesiumElement;
@@ -189,7 +302,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
         // timeline={true}
         timeline={false}
         animation={false}
-        baseLayerPicker={true}
+        baseLayerPicker={false}
         homeButton={false}
         geocoder={false}
         sceneModePicker={false}
@@ -198,6 +311,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
         shadows={true}
         // terrain={Terrain.fromWorldTerrain()}
         terrainShadows={ShadowMode.ENABLED}
+        resolutionScale={1}
+        useBrowserRecommendedResolution={false}
       >
         <ShadowMap
           size={2048}
@@ -217,8 +332,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
             depthTestAgainstTerrain={true}
             atmosphereLightIntensity={20}
             vertexShadowDarkness={1}
-            show={false}
-            terrainProvider={CesiumTerrainProvider.fromIonAssetId(1)}
+            show={!show3DTiles}
+            terrainProvider={terrainProvider}
             lightingFadeInDistance={Number.POSITIVE_INFINITY}
             lightingFadeOutDistance={Number.POSITIVE_INFINITY}
             nightFadeInDistance={Number.POSITIVE_INFINITY}
@@ -228,10 +343,17 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
         {/* Load Google Photorealistic 3D Tiles as Terrain */}
         {CESIUM_ION_ACCESS_TOKEN && (
             <Cesium3DTileset
-              url={IonResource.fromAssetId(2275207)}
+              url={tilesetUrl}
               enableCollision={true}
+              show={show3DTiles}
             />
         )}
+
+        <ImageryLayer
+            alpha={0.8}
+            show={showHeatmap}
+            imageryProvider={heatmapProvider}
+        />
 
         <Clock
             startTime={startJD}
@@ -242,7 +364,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
             clockRange={ClockRange.CLAMPED}
             clockStep={ClockStep.SYSTEM_CLOCK_MULTIPLIER}
         />
-        <CameraFlyTo destination={cameraDestination} duration={2} />
+
         <Sun />
         <Moon />
 
@@ -253,7 +375,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
           totalityEndTime={eclipseTiming.totalityEndTime}
           data={coverageData}
       />
-        <PoiLayer onPoiClick={onFlyTo} />
+        <PoiLayer onPoiClick={onFlyTo} clampTo3DTiles={show3DTiles} />
       </Viewer>
     </div>
   );

@@ -62,10 +62,9 @@ export default function TimelineControl({ startTime, endTime, totalityStartTime,
   return (
     <Card style={{
         position: 'absolute',
-        bottom: '30px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '90%',
+        bottom: '40px',
+        left: 20,
+        right: 20,
         maxWidth: '900px',
         zIndex: 100,
         overflow: 'visible',

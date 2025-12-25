@@ -3,7 +3,8 @@ import {
   Observer,
   Equator,
   SearchLocalSolarEclipse,
-  EclipseKind
+  EclipseKind,
+  Horizon
 } from 'astronomy-engine';
 
 export interface EclipseTiming {
@@ -136,4 +137,23 @@ function calculateCircleOverlap(r1: number, r2: number, d: number): number {
   const sunArea = Math.PI * r1Sq;
 
   return Math.min(1, intersectionArea / sunArea);
+}
+/**
+ * Calculates the Sun's position (Azimuth and Elevation) for a specific time and location.
+ *
+ * @param date Time of observation
+ * @param lat Latitude in degrees
+ * @param lng Longitude in degrees
+ * @param elevation Elevation in meters (optional, default 0)
+ * @returns Object containing azimuth and elevation in degrees.
+ */
+export function getSunPosition(date: Date, lat: number, lng: number, elevation: number = 0) {
+  const observer = new Observer(lat, lng, elevation);
+  const sunTopo = Equator(Body.Sun, date, observer, true, true);
+  const sunHor = Horizon(date, observer, sunTopo.ra, sunTopo.dec, 'normal');
+
+  return {
+    azimuth: sunHor.azimuth,
+    elevation: sunHor.altitude
+  };
 }
