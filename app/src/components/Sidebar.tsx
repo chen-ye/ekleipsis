@@ -111,7 +111,7 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
         width: '360px',
         maxHeight: 'calc(100vh - 80px)',
         background: 'var(--color-panel-translucent)',
-        backdropFilter: 'blur(10px)',
+        backdropFilter: 'blur(16px)',
         borderRadius: 'var(--radius-4)',
         border: '1px solid var(--gray-a4)',
         zIndex: 10,

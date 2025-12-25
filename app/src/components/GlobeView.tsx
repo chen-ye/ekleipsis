@@ -245,7 +245,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
           zIndex: 100,
           background: 'rgba(255,0,0,0.8)',
           color: 'white',
-          padding: '10px',
+          padding: '16px',
           borderRadius: '4px'
         }}>
           Warning: VITE_CESIUM_ION_ACCESS_TOKEN is missing.
@@ -274,7 +274,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
           radius="full"
           size="2"
           style={{
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(16px)',
           }}
         >
           <SegmentedControl.Item value="google">Google 3D</SegmentedControl.Item>
@@ -286,7 +286,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
             padding: '8px 12px',
             borderRadius: 'var(--radius-3)',
             border: '1px solid var(--gray-a4)',
-            backdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(16px)',
         }}>
             <Flex gap="2" align="center">
                 <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} size="1" />

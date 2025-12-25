@@ -69,7 +69,7 @@ export default function TimelineControl({ startTime, endTime, totalityStartTime,
         overflow: 'visible',
         padding: 0,
         backgroundColor: 'var(--black-a6)', // Radix translucent panel
-        backdropFilter: 'blur(10px)', // Enhance glass effect
+        backdropFilter: 'blur(16px)', // Enhance glass effect
     }}>
         <div style={{ height: '140px', width: '100%', position: 'relative' }}>
            <ParentSize>
