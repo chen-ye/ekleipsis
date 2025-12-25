@@ -1,7 +1,6 @@
 import {
   Viewer,
   Sun,
-  SkyAtmosphere,
   Moon,
   Globe,
   Clock,
@@ -20,9 +19,7 @@ import {
   ClockRange,
   ClockStep,
   IonResource,
-  Terrain,
   CesiumTerrainProvider,
-  Cartesian2,
   Cartographic,
   Math as CesiumMath,
   Transforms,
@@ -313,6 +310,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
         terrainShadows={ShadowMode.ENABLED}
         resolutionScale={1}
         useBrowserRecommendedResolution={false}
+        navigationHelpButton={false}
       >
         <ShadowMap
           size={2048}

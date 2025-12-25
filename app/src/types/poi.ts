@@ -23,5 +23,7 @@ export interface Poi {
   };
   // Metadata for imported files
   fileSource?: string;
+  userId?: string;
+  userEmail?: string | null;
   createdAt: number;
 }

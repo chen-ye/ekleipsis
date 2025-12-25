@@ -1,8 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { usePoi } from '../contexts/PoiContext';
 import { parseFile } from '../utils/fileParser';
-import { Flex, Box, Heading, TextField, Button, Card, Text, Badge } from '@radix-ui/themes';
+import { Flex, Box, Heading, TextField, Button, Card, Text, Badge, Avatar, DropdownMenu } from '@radix-ui/themes';
 import { Cartesian3 } from 'cesium';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
 
 interface SidebarProps {
     onPoiClick?: (destination: Cartesian3) => void;
@@ -13,6 +15,27 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+        setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+      try {
+          await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+          console.error("Login failed", e);
+          alert("Login failed");
+      }
+  };
+
+  const handleLogout = async () => {
+      await signOut(auth);
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -34,6 +57,8 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
       }
     }
   };
+
+
 
   const handleSearch = async () => {
     if (!searchQuery) return;
@@ -87,25 +112,49 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
         zIndex: 10
     }}>
       <Box p="4" style={{ borderBottom: '1px solid var(--gray-5)' }}>
-        <Heading size="4">Ekleipsis</Heading>
+        <Flex justify="between" align="center">
+            <Heading size="4">Ekleipsis</Heading>
+            {user ? (
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                        <Avatar
+                            src={user.photoURL || undefined}
+                            fallback={user.email?.[0] || 'U'}
+                            radius="full"
+                            size="2"
+                            style={{ cursor: 'pointer' }}
+                        />
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content>
+                        <DropdownMenu.Label>{user.displayName || user.email}</DropdownMenu.Label>
+                        <DropdownMenu.Item color="red" onClick={handleLogout}>
+                            Log out
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
+            ) : (
+                <Button size="1" variant="soft" onClick={handleLogin}>Log in</Button>
+            )}
+        </Flex>
       </Box>
 
       <Flex direction="column" gap="3" p="4" style={{ borderBottom: '1px solid var(--gray-5)' }}>
         <Flex gap="2">
              <Box flexGrow="1">
                 <TextField.Root
-                    placeholder="Search place..."
+                    placeholder={user ? "Search place..." : "Login to add places"}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    onKeyDown={(e) => e.key === 'Enter' && user && handleSearch()}
+                    disabled={!user}
                 />
              </Box>
-             <Button onClick={handleSearch} disabled={searching} variant="solid">
+             <Button onClick={handleSearch} disabled={searching || !user} variant="solid">
                 {searching ? '...' : 'Add'}
              </Button>
         </Flex>
 
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+        <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={!user}>
           Import POI/GPX
         </Button>
         <input
@@ -115,6 +164,7 @@ export default function Sidebar({ onPoiClick }: SidebarProps) {
           accept=".kml,.gpx,.json,.geojson"
           multiple
           onChange={handleFileUpload}
+          disabled={!user}
         />
       </Flex>
 

@@ -7,13 +7,13 @@ import {
   orderBy,
   onSnapshot
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import type { Poi } from '../types/poi';
 
 const COLLECTION_NAME = 'pois';
 
 export const PoiService = {
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates (Public read)
   subscribePois: (callback: (pois: Poi[]) => void) => {
     // If db is not initialized (api key missing), return empty logic or error handling
     if (!db) {
@@ -36,19 +36,37 @@ export const PoiService = {
         console.error("Cannot add POI: DB not initialized");
         return;
     }
+    if (!auth.currentUser) {
+        console.warn("Cannot add POI: User not authenticated");
+        alert("Please login to add POIs");
+        return;
+    }
     try {
-      await addDoc(collection(db, COLLECTION_NAME), poi);
+      // Add userId to POI? Maybe useful for rules later.
+      // For now just enforce auth.
+      await addDoc(collection(db, COLLECTION_NAME), {
+          ...poi,
+          userId: auth.currentUser.uid,
+          userEmail: auth.currentUser.email
+      });
     } catch (e) {
       console.error("Error adding POI: ", e);
+      alert("Error adding POI (Permission Denied?)");
     }
   },
 
   deletePoi: async (id: string) => {
     if (!db) return;
+    if (!auth.currentUser) {
+        console.warn("Cannot delete POI: User not authenticated");
+        alert("Please login to delete POIs");
+        return;
+    }
     try {
       await deleteDoc(doc(db, COLLECTION_NAME, id));
     } catch (e) {
       console.error("Error deleting POI: ", e);
+      alert("Error deleting POI (Permission Denied?)");
     }
   }
 };

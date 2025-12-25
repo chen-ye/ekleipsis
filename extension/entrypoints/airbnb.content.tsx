@@ -53,12 +53,11 @@ function extractAirbnbData() {
         }
     };
 
-    // Copy to clipboard
-    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-        alert("Copied POI to clipboard! Paste it into Ekleipsis.");
-    }).catch((err) => {
-        console.error("Failed to copy:", err);
-        console.log("Data:", data);
-        alert("Failed to copy to clipboard (check console). Data extracted.");
+    // Send to background for saving
+    browser.runtime.sendMessage({ action: 'SAVE_POI', data }).then(() => {
+        alert("POI sent to Ekleipsis!");
+    }).catch(err => {
+        console.error("Failed to send POI:", err);
+        alert("Failed to save POI. Are you logged in?");
     });
 }
