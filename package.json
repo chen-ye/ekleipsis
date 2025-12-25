@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "npm run dev -w app",
     "build": "npm run build -w app",
+    "check-types": "npm run build -w app",
     "dev:extension": "npm run dev -w extension",
     "build:extension": "npm run build -w extension"
   }

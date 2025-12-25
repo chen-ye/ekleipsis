@@ -66,12 +66,12 @@ export default function TimelineControl({ startTime, endTime, totalityStartTime,
         left: 20,
         right: 20,
         zIndex: 100,
-        overflow: 'visible',
+        overflow: 'hidden', // changed to hidden to prevent spillover
         padding: 0,
         backgroundColor: 'var(--black-a6)', // Radix translucent panel
         backdropFilter: 'blur(16px)', // Enhance glass effect
     }}>
-        <div style={{ height: '140px', width: '100%', position: 'relative' }}>
+        <div style={{ height: 'min(140px, 15svh)', width: '100%', position: 'relative' }}>
            <ParentSize>
              {({ width, height }) => (
                  <EclipseGraph

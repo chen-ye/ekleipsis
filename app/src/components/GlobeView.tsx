@@ -30,6 +30,7 @@ import { useState, useMemo, useEffect } from 'react';
 import TimelineControl from './TimelineControl';
 import PoiLayer from './PoiLayer';
 import Sidebar from './Sidebar';
+import { GlassPanel } from './common/GlassPanel';
 import { SegmentedControl, Switch, Flex, Text, Box } from '@radix-ui/themes';
 import { calculateEclipseCoverage, getEclipseTiming, getSunPosition } from '../utils/eclipseCalculator';
 import { ECLIPSE_DATE_BASE, MALLORCA_LAT, MALLORCA_LNG } from '../constants/eclipse';
@@ -253,21 +254,22 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
       )}
 
 
-      <div style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          zIndex: 100,
-      }}>
-        <Sidebar onPoiClick={onFlyTo} />
-      </div>
+      <Sidebar
+        onPoiClick={onFlyTo}
+        show3DTiles={show3DTiles}
+        setShow3DTiles={setShow3DTiles}
+        showHeatmap={showHeatmap}
+        setShowHeatmap={setShowHeatmap}
+      />
 
       <Flex direction="column" gap="2" style={{
           position: 'absolute',
           top: 20,
           right: 20,
           zIndex: 100,
-      }}>
+      }}
+      display={{ initial: 'none', sm: 'flex' }}
+      >
         <SegmentedControl.Root
           value={show3DTiles ? 'google' : 'cesium'}
           onValueChange={(val) => setShow3DTiles(val === 'google')}
@@ -281,18 +283,12 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
           <SegmentedControl.Item value="cesium">Cesium World</SegmentedControl.Item>
         </SegmentedControl.Root>
 
-        <Box style={{
-            background: 'var(--color-panel-translucent)',
-            padding: '8px 12px',
-            borderRadius: 'var(--radius-3)',
-            border: '1px solid var(--gray-a4)',
-            backdropFilter: 'blur(16px)',
-        }}>
-            <Flex gap="2" align="center">
-                <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} size="1" />
+        <GlassPanel style={{ padding: '8px 12px' }}>
+            <Flex gap="2" align="center" justify="between">
                 <Text size="2" color="gray" highContrast>Strava Heatmap</Text>
+                <Switch checked={showHeatmap} onCheckedChange={setShowHeatmap} size="1" />
             </Flex>
-        </Box>
+        </GlassPanel>
       </Flex>
 
       <Viewer

@@ -1,9 +1,22 @@
 import { Entity, PolylineGraphics } from 'resium';
-import { Cartesian3, Color, HeightReference } from 'cesium';
+import { Cartesian3, Color, HeightReference, VerticalOrigin } from 'cesium';
 import { usePoi } from '../contexts/PoiContext';
+import { useMemo } from 'react';
+import { createMarkerImage } from '../utils/markerUtils';
+import { HomeIcon, EyeOpenIcon, SewingPinIcon } from '@radix-ui/react-icons';
+
+// Hardcoded Iris 9 color from Radix UI
+const ACCENT_COLOR = '#5b5bd6';
 
 export default function PoiLayer({ onPoiClick, clampTo3DTiles = true }: { onPoiClick?: (position: Cartesian3) => void, clampTo3DTiles?: boolean }) {
   const { pois } = usePoi();
+
+  // Pre-generate marker images to avoid recalculating on every render
+  const markerImages = useMemo(() => ({
+    booking: createMarkerImage(HomeIcon, ACCENT_COLOR),
+    viewpoint: createMarkerImage(EyeOpenIcon, ACCENT_COLOR),
+    geocoded: createMarkerImage(SewingPinIcon, ACCENT_COLOR), // Fallback/Generic pin
+  }), []);
 
   if (!pois || pois.length === 0) return null;
 
@@ -23,7 +36,7 @@ export default function PoiLayer({ onPoiClick, clampTo3DTiles = true }: { onPoiC
                <PolylineGraphics
                  positions={positions}
                  width={4}
-                 material={Color.YELLOW}
+                 material={Color.fromCssColorString(ACCENT_COLOR)}
                  clampToGround={true}
                />
              </Entity>
@@ -36,10 +49,9 @@ export default function PoiLayer({ onPoiClick, clampTo3DTiles = true }: { onPoiC
           poi.location.alt || 0
         );
 
-        let color = Color.CYAN;
-        if (poi.type === 'booking') color = Color.ORANGE;
-        if (poi.type === 'viewpoint') color = Color.PURPLE;
-        if (poi.type === 'geocoded') color = Color.RED;
+        let image = markerImages.geocoded;
+        if (poi.type === 'booking') image = markerImages.booking;
+        if (poi.type === 'viewpoint') image = markerImages.viewpoint;
 
         return (
           <Entity
@@ -47,13 +59,11 @@ export default function PoiLayer({ onPoiClick, clampTo3DTiles = true }: { onPoiC
             position={position}
             name={poi.name}
             description={poi.description}
-            point={{
-              pixelSize: 10,
-              color: color,
-              outlineColor: Color.WHITE,
-              outlineWidth: 2,
+            billboard={{
+              image: image,
+              verticalOrigin: VerticalOrigin.BOTTOM,
               heightReference: clampTo3DTiles ? HeightReference.CLAMP_TO_3D_TILE : HeightReference.CLAMP_TO_GROUND,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY
+              disableDepthTestDistance: Number.POSITIVE_INFINITY,
             }}
             onClick={() => onPoiClick?.(position)}
           />
