@@ -1,4 +1,5 @@
 import { kml, gpx as toGeoJsonGpx } from '@tmcw/togeojson';
+import type { Feature, FeatureCollection, Position } from 'geojson';
 import type { GeoLocation, Poi } from '../types/poi';
 
 // Helper to parse file
@@ -12,27 +13,34 @@ export async function parseFile(
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(text, 'text/xml');
 		const geojson = kml(doc);
-		return parseGeoJson(geojson);
+		return parseGeoJson(geojson as FeatureCollection | Feature);
 	} else if (lowerName.endsWith('.gpx')) {
 		// Using gpxparser for metadata if needed, but togeojson is standard for geometry
 		// Let's use togeojson for geometry
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(text, 'text/xml');
 		const geojson = toGeoJsonGpx(doc);
-		return parseGeoJson(geojson);
+		return parseGeoJson(geojson as FeatureCollection | Feature);
 	} else if (lowerName.endsWith('.json') || lowerName.endsWith('.geojson')) {
 		const geojson = JSON.parse(text);
-		return parseGeoJson(geojson);
+		return parseGeoJson(geojson as FeatureCollection | Feature);
 	} else {
 		throw new Error('Unsupported file format');
 	}
 }
 
-function parseGeoJson(geojson: any): any[] {
-	const pois: any[] = [];
+function parseGeoJson(
+	geojson: FeatureCollection | Feature,
+): Pick<Poi, 'name' | 'type' | 'location' | 'path' | 'description'>[] {
+	const pois: Pick<
+		Poi,
+		'name' | 'type' | 'location' | 'path' | 'description'
+	>[] = [];
 
-	const features =
-		geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
+	const features: Feature[] =
+		geojson.type === 'FeatureCollection'
+			? (geojson as FeatureCollection).features
+			: [geojson as Feature];
 
 	for (const feature of features) {
 		if (!feature.geometry) continue;
@@ -43,23 +51,26 @@ function parseGeoJson(geojson: any): any[] {
 		};
 
 		if (feature.geometry.type === 'Point') {
+			const coords = (feature.geometry as { coordinates: Position })
+				.coordinates;
 			pois.push({
 				...basePoi,
 				type: 'imported_file',
 				location: {
-					lng: feature.geometry.coordinates[0],
-					lat: feature.geometry.coordinates[1],
-					alt: feature.geometry.coordinates[2] || 0,
+					lng: coords[0],
+					lat: coords[1],
+					alt: coords[2] || 0,
 				},
 			});
 		} else if (feature.geometry.type === 'LineString') {
-			const path: GeoLocation[] = feature.geometry.coordinates.map(
-				(c: number[]) => ({
-					lng: c[0],
-					lat: c[1],
-					alt: c[2] || 0,
-				}),
-			);
+			const coords = (feature.geometry as { coordinates: Position[] })
+				.coordinates;
+			const path: GeoLocation[] = coords.map((c: Position) => ({
+				lng: c[0],
+				lat: c[1],
+				alt: c[2] || 0,
+			}));
+
 			if (path.length > 0) {
 				pois.push({
 					...basePoi,
