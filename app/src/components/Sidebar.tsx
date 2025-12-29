@@ -249,9 +249,9 @@ export default function Sidebar({
 			display={{ initial: 'flex', sm: 'none' }}
 			style={{
 				position: 'absolute',
-				top: 20,
-				left: 10,
-				right: 10,
+				top: 'var(--space-5)',
+				left: 'var(--space-3)',
+				right: 'var(--space-3)',
 				zIndex: 10,
 				pointerEvents: 'none', // Allow clicking through to map
 			}}
@@ -337,17 +337,18 @@ export default function Sidebar({
 			</Flex>
 
 			{/* Row 2: Login + Layers */}
-			<Flex justify="between" align="center" style={{ pointerEvents: 'auto' }}>
+			<Flex justify="between" align="center">
 				{/* Login Widget */}
 				<LoginWidget
 					user={user}
 					onLogin={handleLogin}
 					onLogout={handleLogout}
+					style={{ pointerEvents: 'auto' }}
 				/>
 
 				{/* Layers Toggle */}
 				<Popover.Root>
-					<Popover.Trigger>
+					<Popover.Trigger style={{ pointerEvents: 'auto' }}>
 						<ActionIconButton>
 							<StackIcon width="18" height="18" />
 						</ActionIconButton>
@@ -582,8 +583,8 @@ export default function Sidebar({
 			<Box
 				style={{
 					position: 'absolute',
-					top: 20,
-					left: 20,
+					top: 'var(--space-5)',
+					left: 'var(--space-5)',
 					zIndex: 100,
 				}}
 				display={{ initial: 'none', sm: 'block' }}

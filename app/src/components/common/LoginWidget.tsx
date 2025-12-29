@@ -20,12 +20,12 @@ const AVATAR_PROPS = {
 	radius: 'full',
 } as const;
 
-export const LoginWidget = ({ user, onLogin, onLogout }: LoginWidgetProps) => {
+export const LoginWidget = ({ user, onLogin, onLogout, style }: LoginWidgetProps) => {
 	if (user) {
 		return (
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
-					<IconButton {...TRIGGER_PROPS}>
+					<IconButton {...TRIGGER_PROPS} style={style}>
 						<Avatar
 							{...AVATAR_PROPS}
 							src={user.photoURL || undefined}
@@ -52,6 +52,7 @@ export const LoginWidget = ({ user, onLogin, onLogout }: LoginWidgetProps) => {
 			style={{
 				gap: 'var(--space-2)',
 				paddingInlineStart: '0',
+				...style,
 			}}
 		>
 			<Avatar {...AVATAR_PROPS} fallback={<PersonIcon />} />

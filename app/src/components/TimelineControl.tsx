@@ -71,9 +71,9 @@ export default function TimelineControl({
 		<Card
 			style={{
 				position: 'absolute',
-				bottom: '40px',
-				left: 20,
-				right: 20,
+				bottom: 'var(--space-7)',
+				left: 'var(--space-5)',
+				right: 'var(--space-5)',
 				zIndex: 100,
 				overflow: 'hidden', // changed to hidden to prevent spillover
 				padding: 0,
@@ -310,13 +310,13 @@ function EclipseGraph({
 					left: displayX - 40, // Center horizontally
 					top: yMax - 12, // Center vertically on axis
 					width: '80px',
-					height: '24px',
+					height: 'var(--space-5)',
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
 					background: overlayBg,
 					backdropFilter: 'blur(8px)',
-					borderRadius: '12px',
+					borderRadius: 'var(--radius-5)',
 					border: `1px solid ${overlayBorder}`,
 					boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
 					color: 'var(--gray-12)',

@@ -280,8 +280,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 						zIndex: 100,
 						background: 'rgba(255,0,0,0.8)',
 						color: 'white',
-						padding: '16px',
-						borderRadius: '4px',
+						padding: 'var(--space-4)',
+						borderRadius: 'var(--radius-3)',
 					}}
 				>
 					Warning: VITE_CESIUM_ION_ACCESS_TOKEN is missing.
