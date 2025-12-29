@@ -45,25 +45,15 @@ export const LoginWidget = ({ user, onLogin, onLogout }: LoginWidgetProps) => {
 					variant="ghost"
 					onClick={onLogin}
 					style={{
-						padding: '4px 12px 4px 8px',
-						height: 'auto',
 						gap: '8px',
 						color: 'var(--gray-12)',
 					}}
 				>
-					<Box
-						style={{
-							background: 'var(--gray-a4)',
-							borderRadius: '50%',
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							width: '24px',
-							height: '24px',
-						}}
-					>
-						<PersonIcon width="14" height="14" />
-					</Box>
+					<Avatar
+						size="2"
+						radius="full"
+						fallback={<PersonIcon />}
+					/>
 					Log in
 				</Button>
 			)}
