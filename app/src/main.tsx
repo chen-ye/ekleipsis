@@ -7,6 +7,7 @@ import { Theme } from '@radix-ui/themes';
 import './index.css';
 import App from './App.tsx';
 
+// biome-ignore lint/style/noNonNullAssertion: root element is guaranteed to exist
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<Theme

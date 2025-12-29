@@ -136,8 +136,6 @@ function EclipseGraph({
 	onTimeChange,
 	onDragStateChange,
 }: EclipseGraphProps) {
-
-
 	const margin = { top: 20, bottom: 30, left: 0, right: 0 };
 	const xMax = width;
 	const yMax = height - margin.bottom;
@@ -150,7 +148,7 @@ function EclipseGraph({
 				domain: [startTime, endTime],
 				range: [margin.left, xMax - margin.right],
 			}),
-		[startTime, endTime, xMax, margin.left, margin.right],
+		[startTime, endTime, xMax],
 	);
 
 	const yScale = useMemo(
@@ -159,7 +157,7 @@ function EclipseGraph({
 				domain: [0, maxCoverage || 1],
 				range: [yMax, margin.top],
 			}),
-		[maxCoverage, yMax, margin.top],
+		[maxCoverage, yMax],
 	);
 
 	const handlePointer = useCallback(
@@ -170,7 +168,7 @@ function EclipseGraph({
 			const newDate = xScale.invert(clampedX);
 			onTimeChange(newDate);
 		},
-		[xScale, margin.left, xMax, margin.right, onTimeChange],
+		[xScale, xMax, onTimeChange],
 	);
 
 	const currentX = xScale(currentTime) ?? margin.left;
@@ -217,6 +215,7 @@ function EclipseGraph({
 					onDragStateChange(false);
 				}}
 			>
+				<title>Eclipse Timeline Graph</title>
 				{/* Define gradient using CSS vars */}
 				<LinearGradient
 					id="eclipse-gradient"

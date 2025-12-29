@@ -5,7 +5,7 @@ import {
 	Horizon,
 	Observer,
 	SearchLocalSolarEclipse,
-} from "astronomy-engine";
+} from 'astronomy-engine';
 
 export interface EclipseTiming {
 	startTime: Date;
@@ -163,7 +163,7 @@ export function getSunPosition(
 ) {
 	const observer = new Observer(lat, lng, elevation);
 	const sunTopo = Equator(Body.Sun, date, observer, true, true);
-	const sunHor = Horizon(date, observer, sunTopo.ra, sunTopo.dec, "normal");
+	const sunHor = Horizon(date, observer, sunTopo.ra, sunTopo.dec, 'normal');
 
 	return {
 		azimuth: sunHor.azimuth,
