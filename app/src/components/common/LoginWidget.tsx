@@ -1,5 +1,5 @@
 import { PersonIcon } from '@radix-ui/react-icons';
-import { Avatar, Box, Button, DropdownMenu } from '@radix-ui/themes';
+import { Avatar, Button, DropdownMenu, IconButton } from '@radix-ui/themes';
 import type { User } from 'firebase/auth';
 
 interface LoginWidgetProps {
@@ -8,56 +8,54 @@ interface LoginWidgetProps {
 	onLogout: () => void;
 }
 
+const TRIGGER_PROPS = {
+	size: '2',
+	variant: 'surface',
+	radius: 'full',
+	color: 'gray',
+} as const;
+
+const AVATAR_PROPS = {
+	size: '2',
+	radius: 'full',
+} as const;
+
 export const LoginWidget = ({ user, onLogin, onLogout }: LoginWidgetProps) => {
-	return (
-		<Box
-			style={{
-				background: 'var(--color-panel-translucent)',
-				backdropFilter: 'blur(16px)',
-				borderRadius: '9999px', // Pill shape
-				border: '1px solid var(--gray-a4)',
-				overflow: 'hidden',
-			}}
-		>
-			{user ? (
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
+	if (user) {
+		return (
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<IconButton {...TRIGGER_PROPS}>
 						<Avatar
+							{...AVATAR_PROPS}
 							src={user.photoURL || undefined}
 							fallback={user.email?.[0] || 'U'}
-							radius="full"
-							size="2"
-							style={{ cursor: 'pointer', display: 'block' }}
 						/>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Label>
-							{user.displayName || user.email}
-						</DropdownMenu.Label>
-						<DropdownMenu.Item color="red" onClick={onLogout}>
-							Log out
-						</DropdownMenu.Item>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			) : (
-				<Button
-					size="2"
-					variant="surface"
-					onClick={onLogin}
-					style={{
-						gap: '8px',
-						paddingInlineStart: '0',
-						color: 'var(--gray-12)',
-					}}
-				>
-					<Avatar
-						size="2"
-						radius="full"
-						fallback={<PersonIcon />}
-					/>
-					Log in
-				</Button>
-			)}
-		</Box>
+					</IconButton>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Label>
+						{user.displayName || user.email}
+					</DropdownMenu.Label>
+					<DropdownMenu.Item color="red" onClick={onLogout}>
+						Log out
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		);
+	}
+
+	return (
+		<Button
+			{...TRIGGER_PROPS}
+			onClick={onLogin}
+			style={{
+				gap: 'var(--space-2)',
+				paddingInlineStart: '0',
+			}}
+		>
+			<Avatar {...AVATAR_PROPS} fallback={<PersonIcon />} />
+			Log in
+		</Button>
 	);
 };
