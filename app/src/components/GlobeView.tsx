@@ -73,7 +73,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		return getEclipseTiming(baseDate, MALLORCA_LAT, MALLORCA_LNG);
 	}, []);
 
-	/* Existing useMemo */
+
 	const { startJD, endJD, totalityStartJD, totalityEndJD } = useMemo(() => {
 		if (!eclipseTiming)
 			return { startJD: JulianDate.now(), endJD: JulianDate.now() };
@@ -89,7 +89,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		};
 	}, [eclipseTiming]);
 
-	// Generate graph data (lifted from TimelineControl)
+	// Generate graph data
+
 	const coverageData = useMemo(() => {
 		if (!eclipseTiming) return [];
 
@@ -120,18 +121,14 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 	const flyToState = useMemo(() => {
 		if (!eclipseTiming || !cameraDestination) return undefined;
 
-		// 1. Get Lat/Lng of destination (POI)
 		const cartographic = Cartographic.fromCartesian(cameraDestination);
 		const lat = CesiumMath.toDegrees(cartographic.latitude);
 		const lng = CesiumMath.toDegrees(cartographic.longitude);
 
-		// 2. Get Sun Position at peak time
 		const sunPos = getSunPosition(eclipseTiming.peakTime, lat, lng, 0);
 		const sunAzRad = CesiumMath.toRadians(sunPos.azimuth);
 
-		// 3. Calculate Camera Offset
-		// We want to be "behind" the POI relative to the Sun.
-		// So we move in the direction opposite to Sun Azimuth.
+		// Calculate Camera Offset - position behind POI relative to Sun
 		const range = 3000; // 3km back
 		const heightOffset = 1000; // 1km up
 
@@ -143,13 +140,13 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		const offsetY = range * Math.cos(sunAzRad + Math.PI);
 		const offsetZ = heightOffset;
 
-		// 4. Transform Local Offset to World Coordinates
+
 		const enuMatrix = Transforms.eastNorthUpToFixedFrame(cameraDestination);
 		const offset = new Cartesian3(offsetX, offsetY, offsetZ);
 		const finalDest = new Cartesian3();
 		Matrix4.multiplyByPoint(enuMatrix, offset, finalDest);
 
-		// 5. Orientation
+
 		// Heading: Look at Sun (sunAzRad)
 		// Pitch: Look somewhat down to see POI context (-20 deg)
 		return {
@@ -204,7 +201,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				return;
 			}
 
-			// 1. Check Totality (Inclusive)
+			// Check Totality (Inclusive)
 			if (totalityStartJD && totalityEndJD) {
 				if (
 					JulianDate.greaterThanOrEquals(time, totalityStartJD) &&
@@ -215,8 +212,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				}
 			}
 
-			// 2. Check Partial Phases
-			// Ingress: start <= time < totalityStart
+			// Check Partial Phases
 			if (
 				totalityStartJD &&
 				JulianDate.greaterThanOrEquals(time, startJD) &&
@@ -251,7 +247,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				return;
 			}
 
-			// 3. Defaults
+
 			sky.brightnessShift = 0.0;
 		};
 

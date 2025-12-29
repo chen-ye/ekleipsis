@@ -2,7 +2,6 @@ import { kml, gpx as toGeoJsonGpx } from '@tmcw/togeojson';
 import type { Feature, FeatureCollection, Position } from 'geojson';
 import type { GeoLocation, Poi } from '../types/poi';
 
-// Helper to parse file
 export async function parseFile(
 	file: File,
 ): Promise<Pick<Poi, 'name' | 'type' | 'location' | 'path' | 'description'>[]> {
@@ -15,8 +14,6 @@ export async function parseFile(
 		const geojson = kml(doc);
 		return parseGeoJson(geojson as FeatureCollection | Feature);
 	} else if (lowerName.endsWith('.gpx')) {
-		// Using gpxparser for metadata if needed, but togeojson is standard for geometry
-		// Let's use togeojson for geometry
 		const parser = new DOMParser();
 		const doc = parser.parseFromString(text, 'text/xml');
 		const geojson = toGeoJsonGpx(doc);

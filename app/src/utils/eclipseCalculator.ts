@@ -65,14 +65,11 @@ export function calculateEclipseCoverage(
 ): number {
 	const observer = new Observer(lat, lng, elevation);
 
-	// 1. Calculate topocentric coordinates (Azimuth/Elevation) for Sun and Moon
+	// Calculate topocentric coordinates for Sun and Moon
 	const sunTopo = Equator(Body.Sun, date, observer, true, true);
 	const moonTopo = Equator(Body.Moon, date, observer, true, true);
 
-	// 2. Calculate angular separation
-	// We can convert RA/Dec to a unit vector or use built-in angle functions if available.
-	// Astronomy Engine doesn't have a direct "AngleBetween" for Equator coordinates in the docs I recall,
-	// but we can convert to vector or use spherical law of cosines.
+	// Calculate angular separation
 
 	// Convert RA (hours) to degrees: RA * 15
 	const sunRA = sunTopo.ra * 15 * (Math.PI / 180);
@@ -81,19 +78,14 @@ export function calculateEclipseCoverage(
 	const moonRA = moonTopo.ra * 15 * (Math.PI / 180);
 	const moonDec = moonTopo.dec * (Math.PI / 180);
 
-	// Angular separation (sigma) using spherical law of cosines
-	// cos(c) = sin(dec1)sin(dec2) + cos(dec1)cos(dec2)cos(ra1-ra2)
 	const cosSigma =
 		Math.sin(sunDec) * Math.sin(moonDec) +
 		Math.cos(sunDec) * Math.cos(moonDec) * Math.cos(sunRA - moonRA);
 
-	// Use acos, clamping to [-1, 1] to avoid float errors
 	const sigmaRad = Math.acos(Math.max(-1, Math.min(1, cosSigma)));
 	const dist = sigmaRad * (180 / Math.PI); // degrees
 
-	// 3. Angular radii
-	// Astronomy-engine usually provides distance in AU (vec.dist or similar) or we can approximate/calculate.
-	// Actually Equator output includes distance in AU.
+	// Angular radii
 	const sunDistAU = sunTopo.dist;
 	const moonDistAU = moonTopo.dist;
 

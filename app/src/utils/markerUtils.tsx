@@ -13,9 +13,7 @@ export const createMarkerImage = (
 	color: string,
 	size: number = 25,
 ): string => {
-	// Render icon to SVG string
-	// We render specific props to ensure it's white and centered/sized correctly
-	// The icon itself is usually square, so we scale it down slightly to fit in the circle.
+	// Render icon to SVG string; scale down to fit in circle
 	const iconSize = size * 0.6;
 	const svgString = renderToStaticMarkup(
 		<IconComponent color="white" width={iconSize} height={iconSize} />,
