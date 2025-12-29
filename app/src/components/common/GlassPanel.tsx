@@ -1,6 +1,6 @@
+import React from 'react';
 import { Box } from '@radix-ui/themes';
 import type { BoxProps } from '@radix-ui/themes';
-import React from 'react';
 
 type GlassPanelProps = BoxProps & {
     children: React.ReactNode;

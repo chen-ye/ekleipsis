@@ -1,15 +1,15 @@
-import { useRef, useState, useEffect } from 'react';
-import { usePoi } from '../contexts/PoiContext';
-import { parseFile } from '../utils/fileParser';
-import { Flex, Box, Heading, TextField, Button, RadioCards, Text, Badge, IconButton, Dialog, AlertDialog, Popover, Switch, SegmentedControl, Select } from '@radix-ui/themes';
-import { Pencil1Icon, TrashIcon, MagnifyingGlassIcon, UploadIcon, PlusIcon, StackIcon, ListBulletIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { Cross2Icon, ListBulletIcon, MagnifyingGlassIcon, Pencil1Icon, PlusIcon, StackIcon, TrashIcon, UploadIcon } from '@radix-ui/react-icons';
+import { AlertDialog, Badge, Box, Button, Dialog, Flex, Heading, IconButton, Popover, RadioCards, SegmentedControl, Select, Switch, Text, TextField } from '@radix-ui/themes';
 import { Cartesian3 } from 'cesium';
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebase/auth';
+import { useEffect, useRef, useState } from 'react';
+import { usePoi } from '../contexts/PoiContext';
 import { auth } from '../firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
-import { GlassPanel } from './common/GlassPanel';
+import type { Poi, PoiType } from '../types/poi';
+import { parseFile } from '../utils/fileParser';
 import { ActionIconButton } from './common/ActionIconButton';
+import { GlassPanel } from './common/GlassPanel';
 import { LoginWidget } from './common/LoginWidget';
-import type { PoiType } from '../types/poi';
 
 interface SidebarProps {
     onPoiClick?: (destination: Cartesian3) => void;
@@ -101,7 +101,7 @@ export default function Sidebar({ onPoiClick, show3DTiles, setShow3DTiles, showH
     }
   };
 
-  const handlePoiCardClick = (poi: any) => {
+  const handlePoiCardClick = (poi: Poi) => {
     if (!onPoiClick) return;
 
     let destination: Cartesian3;
@@ -123,7 +123,6 @@ export default function Sidebar({ onPoiClick, show3DTiles, setShow3DTiles, showH
             overflow: 'hidden',
             padding: 0 // Override default if any, we want inner structure
         }}
-        radius="4"
     >
       <Box p="4" style={{ borderBottom: '1px solid var(--gray-a4)' }}>
         <Flex justify="between" align="center">
@@ -306,6 +305,8 @@ export default function Sidebar({ onPoiClick, show3DTiles, setShow3DTiles, showH
                                     </Flex>
                                 </Box>
                                 {user && (
+                                    // biome-ignore lint/a11y/noStaticElementInteractions: suppresses bubbling
+                                    // biome-ignore lint/a11y/useKeyWithClickEvents: suppresses bubbling
                                     <div onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()} style={{ pointerEvents: 'auto' }}>
                                         <Flex gap="3">
                                             <Dialog.Root open={editingPoi?.id === poi.id} onOpenChange={(open) => !open && setEditingPoi(null)}>
