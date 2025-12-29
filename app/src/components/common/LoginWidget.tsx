@@ -42,10 +42,11 @@ export const LoginWidget = ({ user, onLogin, onLogout }: LoginWidgetProps) => {
 			) : (
 				<Button
 					size="2"
-					variant="ghost"
+					variant="surface"
 					onClick={onLogin}
 					style={{
 						gap: '8px',
+						paddingInlineStart: '0',
 						color: 'var(--gray-12)',
 					}}
 				>

@@ -405,7 +405,7 @@ export default function Sidebar({
 					<RadioCards.Root
 						columns="1"
 						gap="3"
-						value={selectedPoiId}
+						value={selectedPoiId ?? ''}
 						onValueChange={(value) => {
 							setSelectedPoiId(value);
 							const poi = pois.find((p) => p.id === value);
