@@ -1,22 +1,22 @@
-import { Flex, SegmentedControl, Switch, Text } from "@radix-ui/themes";
+import { Flex, SegmentedControl, Switch, Text } from '@radix-ui/themes';
 import {
 	Cartesian3,
-	type Viewer as CesiumViewer,
+	Cartographic,
 	type Clock as CesiumClock,
-	JulianDate,
-	Ion,
-	ShadowMode,
+	Math as CesiumMath,
+	CesiumTerrainProvider,
+	type Viewer as CesiumViewer,
 	ClockRange,
 	ClockStep,
+	Ion,
 	IonResource,
-	CesiumTerrainProvider,
-	Cartographic,
-	Math as CesiumMath,
-	Transforms,
+	JulianDate,
 	Matrix4,
+	ShadowMode,
+	Transforms,
 	UrlTemplateImageryProvider,
-} from "cesium";
-import { useState, useMemo, useEffect } from "react";
+} from 'cesium';
+import { useEffect, useMemo, useState } from 'react';
 import {
 	Cesium3DTileset,
 	Clock,
@@ -27,21 +27,21 @@ import {
 	ShadowMap,
 	Sun,
 	Viewer,
-} from "resium";
+} from 'resium';
 import {
 	ECLIPSE_DATE_BASE,
 	MALLORCA_LAT,
 	MALLORCA_LNG,
-} from "../constants/eclipse";
+} from '../constants/eclipse';
 import {
 	calculateEclipseCoverage,
 	getEclipseTiming,
 	getSunPosition,
-} from "../utils/eclipseCalculator";
-import { GlassPanel } from "./common/GlassPanel";
-import PoiLayer from "./PoiLayer";
-import Sidebar from "./Sidebar";
-import TimelineControl from "./TimelineControl";
+} from '../utils/eclipseCalculator';
+import { GlassPanel } from './common/GlassPanel';
+import PoiLayer from './PoiLayer';
+import Sidebar from './Sidebar';
+import TimelineControl from './TimelineControl';
 
 // Default to Mallorca
 // const MALLORCA_POSITION = Cartesian3.fromDegrees(MALLORCA_LNG, MALLORCA_LAT, 20000);
@@ -171,7 +171,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 	const heatmapProvider = useMemo(
 		() =>
 			new UrlTemplateImageryProvider({
-				url: "https://strava-heatmap-proxy.cye.workers.dev/global/orange/all/{z}/{x}/{y}@2x.png",
+				url: 'https://strava-heatmap-proxy.cye.workers.dev/global/orange/all/{z}/{x}/{y}@2x.png',
 				enablePickFeatures: false,
 			}),
 		[],
@@ -274,18 +274,18 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 	if (!eclipseTiming) return <div>Computing eclipse data...</div>;
 
 	return (
-		<div style={{ width: "100%", height: "100%" }}>
+		<div style={{ width: '100%', height: '100%' }}>
 			{!CESIUM_ION_ACCESS_TOKEN && (
 				<div
 					style={{
-						position: "absolute",
+						position: 'absolute',
 						top: 10,
 						left: 10,
 						zIndex: 100,
-						background: "rgba(255,0,0,0.8)",
-						color: "white",
-						padding: "16px",
-						borderRadius: "4px",
+						background: 'rgba(255,0,0,0.8)',
+						color: 'white',
+						padding: '16px',
+						borderRadius: '4px',
 					}}
 				>
 					Warning: VITE_CESIUM_ION_ACCESS_TOKEN is missing.
@@ -304,20 +304,20 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				direction="column"
 				gap="2"
 				style={{
-					position: "absolute",
+					position: 'absolute',
 					top: 20,
 					right: 20,
 					zIndex: 100,
 				}}
-				display={{ initial: "none", sm: "flex" }}
+				display={{ initial: 'none', sm: 'flex' }}
 			>
 				<SegmentedControl.Root
-					value={show3DTiles ? "google" : "cesium"}
-					onValueChange={(val) => setShow3DTiles(val === "google")}
+					value={show3DTiles ? 'google' : 'cesium'}
+					onValueChange={(val) => setShow3DTiles(val === 'google')}
 					radius="full"
 					size="2"
 					style={{
-						backdropFilter: "blur(16px)",
+						backdropFilter: 'blur(16px)',
 					}}
 				>
 					<SegmentedControl.Item value="google">
@@ -328,7 +328,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 					</SegmentedControl.Item>
 				</SegmentedControl.Root>
 
-				<GlassPanel style={{ padding: "8px 12px" }}>
+				<GlassPanel style={{ padding: '8px 12px' }}>
 					<Flex gap="2" align="center" justify="between">
 						<Text size="2" color="gray" highContrast>
 							Strava Heatmap

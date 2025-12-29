@@ -1,52 +1,60 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { Poi } from '../types/poi';
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useState,
+} from 'react';
 import { PoiService } from '../services/poiService';
+import type { Poi } from '../types/poi';
 
 interface PoiContextType {
-  pois: Poi[];
-  addPoi: (poi: Omit<Poi, 'id'>) => Promise<void>;
-  updatePoi: (id: string, updates: Partial<Omit<Poi, 'id'>>) => Promise<void>;
-  deletePoi: (id: string) => Promise<void>;
-  loading: boolean;
+	pois: Poi[];
+	addPoi: (poi: Omit<Poi, 'id'>) => Promise<void>;
+	updatePoi: (id: string, updates: Partial<Omit<Poi, 'id'>>) => Promise<void>;
+	deletePoi: (id: string) => Promise<void>;
+	loading: boolean;
 }
 
 const PoiContext = createContext<PoiContextType | undefined>(undefined);
 
 export const PoiProvider = ({ children }: { children: ReactNode }) => {
-  const [pois, setPois] = useState<Poi[]>([]);
-  const [loading, setLoading] = useState(true);
+	const [pois, setPois] = useState<Poi[]>([]);
+	const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = PoiService.subscribePois((data) => {
-      setPois(data);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+	useEffect(() => {
+		const unsubscribe = PoiService.subscribePois((data) => {
+			setPois(data);
+			setLoading(false);
+		});
+		return () => unsubscribe();
+	}, []);
 
-  const addPoi = async (poi: Omit<Poi, 'id'>) => {
-    await PoiService.addPoi(poi);
-  };
+	const addPoi = async (poi: Omit<Poi, 'id'>) => {
+		await PoiService.addPoi(poi);
+	};
 
-  const deletePoi = async (id: string) => {
-    await PoiService.deletePoi(id);
-  };
+	const deletePoi = async (id: string) => {
+		await PoiService.deletePoi(id);
+	};
 
-  const updatePoi = async (id: string, updates: Partial<Omit<Poi, 'id'>>) => {
-    await PoiService.updatePoi(id, updates);
-  };
+	const updatePoi = async (id: string, updates: Partial<Omit<Poi, 'id'>>) => {
+		await PoiService.updatePoi(id, updates);
+	};
 
-  return (
-    <PoiContext.Provider value={{ pois, addPoi, updatePoi, deletePoi, loading }}>
-      {children}
-    </PoiContext.Provider>
-  );
+	return (
+		<PoiContext.Provider
+			value={{ pois, addPoi, updatePoi, deletePoi, loading }}
+		>
+			{children}
+		</PoiContext.Provider>
+	);
 };
 
 export const usePoi = () => {
-  const context = useContext(PoiContext);
-  if (!context) {
-    throw new Error('usePoi must be used within a PoiProvider');
-  }
-  return context;
+	const context = useContext(PoiContext);
+	if (!context) {
+		throw new Error('usePoi must be used within a PoiProvider');
+	}
+	return context;
 };
