@@ -6,6 +6,7 @@ interface LoginWidgetProps {
 	user: User | null;
 	onLogin: () => void;
 	onLogout: () => void;
+	style?: React.CSSProperties;
 }
 
 const TRIGGER_PROPS = {
