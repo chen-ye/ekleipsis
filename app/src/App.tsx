@@ -17,7 +17,7 @@ function App() {
 
 	return (
 		<PoiProvider>
-			<Box style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+			<Box style={{ width: '100vw', height: '100svh', overflow: 'hidden' }}>
 				<GlobeView
 					cameraDestination={cameraDestination}
 					onFlyTo={setCameraDestination}
