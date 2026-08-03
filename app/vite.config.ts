@@ -6,15 +6,21 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 const require = createRequire(import.meta.url);
 const cesiumPackage = require.resolve('cesium/package.json');
-const cesiumSource = normalizePath(
-	path.resolve(path.dirname(cesiumPackage), 'Build/Cesium'),
+const cesiumSourceAbs = path.resolve(
+	path.dirname(cesiumPackage),
+	'Build/Cesium',
+);
+const cesiumSourceRel = normalizePath(
+	path.relative(process.cwd(), cesiumSourceAbs),
 );
 
 // https://vite.dev/config/
 export default defineConfig({
 	base: '/ekleipsis/',
+	build: {
+		emptyOutDir: true,
+	},
 	define: {
-		// Define relative base path in cesium for loading assets
 		CESIUM_BASE_URL: JSON.stringify('/ekleipsis/cesiumStatic/'),
 	},
 	plugins: [
@@ -22,8 +28,20 @@ export default defineConfig({
 		viteStaticCopy({
 			targets: [
 				{
-					src: `${cesiumSource}/*`,
-					dest: 'cesiumStatic',
+					src: `${cesiumSourceRel}/Workers/**/*`,
+					dest: 'cesiumStatic/Workers',
+				},
+				{
+					src: `${cesiumSourceRel}/ThirdParty/**/*`,
+					dest: 'cesiumStatic/ThirdParty',
+				},
+				{
+					src: `${cesiumSourceRel}/Assets/**/*`,
+					dest: 'cesiumStatic/Assets',
+				},
+				{
+					src: `${cesiumSourceRel}/Widgets/**/*`,
+					dest: 'cesiumStatic/Widgets',
 				},
 			],
 		}),
