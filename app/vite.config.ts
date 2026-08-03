@@ -47,24 +47,9 @@ export default defineConfig({
 		viteStaticCopy({
 			targets: [
 				{
-					src: `${cesiumSourceRel}/Workers/**/*`,
-					dest: 'cesiumStatic/Workers',
-					rename: { stripBase: 6 },
-				},
-				{
-					src: `${cesiumSourceRel}/ThirdParty/**/*`,
-					dest: 'cesiumStatic/ThirdParty',
-					rename: { stripBase: 6 },
-				},
-				{
-					src: `${cesiumSourceRel}/Assets/**/*`,
-					dest: 'cesiumStatic/Assets',
-					rename: { stripBase: 6 },
-				},
-				{
-					src: `${cesiumSourceRel}/Widgets/**/*`,
-					dest: 'cesiumStatic/Widgets',
-					rename: { stripBase: 6 },
+					src: `${cesiumSourceRel}/**/*`,
+					dest: 'cesiumStatic',
+					rename: { stripBase: 4 },
 				},
 			],
 		}),
