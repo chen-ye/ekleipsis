@@ -1,5 +1,6 @@
 import { Flex, SegmentedControl, Switch, Text } from '@radix-ui/themes';
 import {
+	BoundingSphere,
 	Cartesian3,
 	Cartographic,
 	type Clock as CesiumClock,
@@ -8,6 +9,7 @@ import {
 	type Viewer as CesiumViewer,
 	ClockRange,
 	ClockStep,
+	CullingVolume,
 	Ion,
 	IonResource,
 	JulianDate,
@@ -51,6 +53,20 @@ export interface DataPoint {
 	coverage: number;
 }
 
+interface FrameState {
+	camera: {
+		positionWC: Cartesian3;
+	};
+	cullingVolume: CullingVolume;
+}
+
+interface UpdatableWithShadows {
+	_updateWrapped?: boolean;
+	update: (frameState: FrameState) => void;
+	preloadAncestors?: boolean;
+	preloadSiblings?: boolean;
+}
+
 const CESIUM_ION_ACCESS_TOKEN = import.meta.env.VITE_CESIUM_ION_ACCESS_TOKEN;
 
 if (CESIUM_ION_ACCESS_TOKEN) {
@@ -64,8 +80,8 @@ interface GlobeViewProps {
 
 function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 	const [viewer, setViewer] = useState<CesiumViewer | null>(null);
-	const [show3DTiles, setShow3DTiles] = useState(true);
-	const [showHeatmap, setShowHeatmap] = useState(false);
+	const [show3DTiles, setShow3DTiles] = useState(false);
+	const [showHeatmap, setShowHeatmap] = useState(true);
 
 	// Compute eclipse timing dynamically based on Mallorca location
 	const eclipseTiming = useMemo(() => {
@@ -167,6 +183,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 			new UrlTemplateImageryProvider({
 				url: 'https://strava-heatmap-proxy.cye.workers.dev/global/orange/all/{z}/{x}/{y}@2x.png',
 				enablePickFeatures: false,
+				maximumLevel: 14,
 			}),
 		[],
 	);
@@ -262,6 +279,105 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 			viewer.timeline?.zoomTo?.(startJD, endJD);
 		}
 	}, [viewer, eclipseTiming, startJD, endJD]);
+
+	// Intercept ShadowMap and Globe terrain update to expand frustum & culling volume for off-camera terrain shadow casters
+	useEffect(() => {
+		if (!viewer) return;
+
+		// Wrap ShadowMap update to extend light camera frustum far plane along sun ray
+		// so off-screen mountains/structures up to 40km away are not clipped by fitShadowMapToScene
+		const shadowMap = viewer.shadowMap as unknown as {
+			_updateWrapped?: boolean;
+			size: number;
+			maximumDistance: number;
+			fadingEnabled: boolean;
+			softShadows: boolean;
+			darkness: number;
+			normalOffset: boolean;
+			enabled: boolean;
+			update: (frameState: FrameState) => void;
+			_shadowMapCamera?: {
+				positionWC: Cartesian3;
+				directionWC: Cartesian3;
+				upWC: Cartesian3;
+				frustum: { far: number };
+			};
+			_shadowMapCullingVolume?: CullingVolume;
+			_passes?: Array<{
+				camera?: {
+					positionWC: Cartesian3;
+					directionWC: Cartesian3;
+					upWC: Cartesian3;
+					frustum: { far: number };
+				};
+				cullingVolume?: CullingVolume;
+			}>;
+		};
+
+		if (shadowMap && !shadowMap._updateWrapped) {
+			shadowMap._updateWrapped = true;
+			shadowMap.size = 4096;
+			shadowMap.maximumDistance = 40000;
+			shadowMap.fadingEnabled = false;
+			shadowMap.softShadows = true;
+			shadowMap.darkness = 0.3;
+			shadowMap.normalOffset = true;
+
+			const originalShadowMapUpdate = shadowMap.update;
+			shadowMap.update = function (frameState: FrameState) {
+				originalShadowMapUpdate.call(this, frameState);
+
+				const extraShadowDepth = 40000;
+				const shadowMapCamera = this._shadowMapCamera;
+				if (shadowMapCamera?.frustum) {
+					shadowMapCamera.frustum.far += extraShadowDepth;
+					this._shadowMapCullingVolume = CullingVolume.fromBoundingSphere(
+						new BoundingSphere(
+							shadowMapCamera.positionWC,
+							shadowMapCamera.frustum.far,
+						),
+					);
+
+					if (this._passes) {
+						for (let i = 0; i < this._passes.length; i++) {
+							const pass = this._passes[i];
+							if (pass?.camera?.frustum) {
+								pass.camera.frustum.far += extraShadowDepth;
+								pass.cullingVolume = CullingVolume.fromBoundingSphere(
+									new BoundingSphere(
+										pass.camera.positionWC,
+										pass.camera.frustum.far,
+									),
+								);
+							}
+						}
+					}
+				}
+			};
+		}
+
+		const globe = viewer.scene.globe as unknown as UpdatableWithShadows;
+		if (globe && !globe._updateWrapped) {
+			globe._updateWrapped = true;
+			const originalGlobeUpdate = globe.update;
+			globe.update = function (frameState: FrameState) {
+				const sm = viewer.shadowMap;
+				if (sm?.enabled) {
+					const origCV = frameState.cullingVolume;
+					const radius = sm.maximumDistance || 40000;
+					const sphere = new BoundingSphere(
+						frameState.camera.positionWC,
+						radius,
+					);
+					frameState.cullingVolume = CullingVolume.fromBoundingSphere(sphere);
+					originalGlobeUpdate.call(this, frameState);
+					frameState.cullingVolume = origCV;
+				} else {
+					originalGlobeUpdate.call(this, frameState);
+				}
+			};
+		}
+	}, [viewer]);
 
 	if (!eclipseTiming) return <div>Computing eclipse data...</div>;
 
@@ -362,8 +478,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				navigationHelpButton={false}
 			>
 				<ShadowMap
-					size={2048}
-					maximumDistance={30000}
+					size={4096}
+					maximumDistance={40000}
 					darkness={0.3}
 					fadingEnabled={false}
 					softShadows={true}
@@ -376,6 +492,12 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 					depthTestAgainstTerrain={true}
 					atmosphereLightIntensity={20}
 					vertexShadowDarkness={1}
+					shadows={ShadowMode.ENABLED}
+					maximumScreenSpaceError={1.5}
+					preloadAncestors={true}
+					preloadSiblings={true}
+					loadingDescendantLimit={2000}
+					tileCacheSize={1000}
 					show={!show3DTiles}
 					terrainProvider={terrainProvider}
 					lightingFadeInDistance={Number.POSITIVE_INFINITY}
@@ -390,6 +512,47 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 						url={tilesetUrl}
 						enableCollision={true}
 						show={show3DTiles}
+						shadows={ShadowMode.ENABLED}
+						maximumScreenSpaceError={8}
+						skipLevelOfDetail={true}
+						immediatelyLoadDesiredLevelOfDetail={true}
+						preferLeaves={true}
+						foveatedScreenSpaceError={false}
+						foveatedTimeDelay={0}
+						progressiveResolutionHeightFraction={0}
+						loadSiblings={true}
+						cullRequestsWhileMoving={false}
+						cacheBytes={2147483648}
+						maximumCacheOverflowBytes={1073741824}
+						ref={(e) => {
+							if (e?.cesiumElement) {
+								const tileset =
+									e.cesiumElement as unknown as UpdatableWithShadows;
+								tileset.preloadAncestors = true;
+								tileset.preloadSiblings = true;
+								if (!tileset._updateWrapped) {
+									tileset._updateWrapped = true;
+									const originalUpdate = tileset.update;
+									tileset.update = function (frameState: FrameState) {
+										const shadowMap = viewer?.shadowMap;
+										if (shadowMap?.enabled) {
+											const origCV = frameState.cullingVolume;
+											const radius = shadowMap.maximumDistance || 40000;
+											const sphere = new BoundingSphere(
+												frameState.camera.positionWC,
+												radius,
+											);
+											frameState.cullingVolume =
+												CullingVolume.fromBoundingSphere(sphere);
+											originalUpdate.call(this, frameState);
+											frameState.cullingVolume = origCV;
+										} else {
+											originalUpdate.call(this, frameState);
+										}
+									};
+								}
+							}
+						}}
 					/>
 				)}
 
