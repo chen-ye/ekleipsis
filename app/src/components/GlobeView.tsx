@@ -198,13 +198,19 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				return;
 			}
 
+			const applyShift = (targetShift: number) => {
+				if (Math.abs(sky.brightnessShift - targetShift) > 0.01) {
+					sky.brightnessShift = targetShift;
+				}
+			};
+
 			// Check Totality (Inclusive)
 			if (totalityStartJD && totalityEndJD) {
 				if (
 					JulianDate.greaterThanOrEquals(time, totalityStartJD) &&
 					JulianDate.lessThanOrEquals(time, totalityEndJD)
 				) {
-					sky.brightnessShift = -1.0;
+					applyShift(-1.0);
 					return;
 				}
 			}
@@ -222,7 +228,7 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				const elapsed = JulianDate.secondsDifference(time, startJD);
 				const progress = Math.max(0, Math.min(1, elapsed / totalSeconds));
 				// Non-linear darkening: stays bright, then drops fast
-				sky.brightnessShift = -1.0 * progress ** 4;
+				applyShift(-1.0 * progress ** 4);
 				return;
 			}
 
@@ -234,17 +240,15 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 			) {
 				const totalSeconds = JulianDate.secondsDifference(endJD, totalityEndJD);
 				// Calculate progress "backwards" from end - symmetry with logic
-				// Ingress: (time - start) / total. 0 at start, 1 at totality.
-				// Egress: (end - time) / total. 0 at end, 1 at totality.
 				const remaining = JulianDate.secondsDifference(endJD, time);
 				const progress = Math.max(0, Math.min(1, remaining / totalSeconds));
 
 				// Non-linear brightening: exactly symmetrical to ingress
-				sky.brightnessShift = -1.0 * progress ** 4;
+				applyShift(-1.0 * progress ** 4);
 				return;
 			}
 
-			sky.brightnessShift = 0.0;
+			applyShift(0.0);
 		};
 
 		// Run immediately to set initial state
@@ -337,6 +341,8 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 			<Viewer
 				full
 				fullscreenButton={false}
+				requestRenderMode={true}
+				maximumRenderTimeChange={Number.POSITIVE_INFINITY}
 				ref={(e) => {
 					if (e?.cesiumElement) {
 						const viewer = e.cesiumElement;

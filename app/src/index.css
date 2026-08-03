@@ -7,3 +7,10 @@ body {
 	min-height: 100svh;
 	overscroll-behavior: none;
 }
+
+.cesium-viewer,
+.cesium-widget canvas {
+	isolation: isolate;
+	transform: translateZ(0);
+	will-change: transform;
+}

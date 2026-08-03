@@ -7,7 +7,7 @@ import { ParentSize } from '@visx/responsive';
 import { scaleLinear, scaleTime } from '@visx/scale';
 import { AreaClosed, Bar, Line } from '@visx/shape';
 import { JulianDate } from 'cesium';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useCesium } from 'resium';
 
 export interface DataPoint {
@@ -31,7 +31,9 @@ export default function TimelineControl({
 	data,
 }: TimelineControlProps) {
 	const { viewer } = useCesium();
-	const [currentTime, setCurrentTime] = useState<Date>(startTime);
+	const [currentTimeMs, setCurrentTimeMs] = useState<number>(() =>
+		startTime.getTime(),
+	);
 	const [isDragging, setIsDragging] = useState(false);
 
 	// Sync state with Cesium clock
@@ -43,10 +45,9 @@ export default function TimelineControl({
 			if (isDragging) return;
 
 			const currentJD = viewer.clock.currentTime;
-			// Convert JulianDate to JS Date
-			// This is a bit approximate but fine for UI
-			const jsDate = JulianDate.toDate(currentJD);
-			setCurrentTime(jsDate);
+			const timeMs = Math.round(JulianDate.toDate(currentJD).getTime());
+			// Returning prevMs when timeMs hasn't changed causes React to BAIL OUT completely
+			setCurrentTimeMs((prevMs) => (prevMs === timeMs ? prevMs : timeMs));
 		};
 
 		viewer.clock.onTick.addEventListener(onTick);
@@ -60,7 +61,7 @@ export default function TimelineControl({
 			if (!viewer) return;
 			const jd = JulianDate.fromDate(time);
 			viewer.clock.currentTime = jd;
-			setCurrentTime(time);
+			setCurrentTimeMs(time.getTime());
 		},
 		[viewer],
 	);
@@ -78,7 +79,10 @@ export default function TimelineControl({
 				overflow: 'hidden', // changed to hidden to prevent spillover
 				padding: 0,
 				backgroundColor: 'var(--black-a6)', // Radix translucent panel
+				WebkitBackdropFilter: 'blur(16px)',
 				backdropFilter: 'blur(16px)', // Enhance glass effect
+				isolation: 'isolate',
+				transform: 'translateZ(0)',
 			}}
 		>
 			<div
@@ -94,7 +98,7 @@ export default function TimelineControl({
 							width={width}
 							height={height}
 							data={data}
-							currentTime={currentTime}
+							currentTimeMs={currentTimeMs}
 							startTime={startTime}
 							endTime={endTime}
 							totalityStartTime={totalityStartTime}
@@ -115,7 +119,7 @@ interface EclipseGraphProps {
 	width: number;
 	height: number;
 	data: DataPoint[];
-	currentTime: Date;
+	currentTimeMs: number;
 	startTime: Date;
 	endTime: Date;
 	totalityStartTime?: Date;
@@ -124,11 +128,11 @@ interface EclipseGraphProps {
 	onDragStateChange: (isDragging: boolean) => void;
 }
 
-function EclipseGraph({
+const EclipseGraph = memo(function EclipseGraph({
 	width,
 	height,
 	data,
-	currentTime,
+	currentTimeMs,
 	startTime,
 	endTime,
 	totalityStartTime,
@@ -136,6 +140,8 @@ function EclipseGraph({
 	onTimeChange,
 	onDragStateChange,
 }: EclipseGraphProps) {
+	const currentTime = useMemo(() => new Date(currentTimeMs), [currentTimeMs]);
+
 	const margin = { top: 20, bottom: 30, left: 0, right: 0 };
 	const xMax = width;
 	const yMax = height - margin.bottom;
@@ -333,4 +339,4 @@ function EclipseGraph({
 			</div>
 		</div>
 	);
-}
+});

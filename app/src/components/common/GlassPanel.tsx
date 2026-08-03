@@ -13,9 +13,13 @@ export const GlassPanel = React.forwardRef<HTMLDivElement, GlassPanelProps>(
 				ref={ref}
 				style={{
 					background: 'var(--color-panel-translucent)',
+					WebkitBackdropFilter: 'blur(16px)',
 					backdropFilter: 'blur(16px)',
 					border: '1px solid var(--gray-a4)',
 					borderRadius: 'var(--radius-3)', // Default radius
+					isolation: 'isolate',
+					transform: 'translateZ(0)',
+					willChange: 'transform',
 					...style,
 				}}
 				{...props}

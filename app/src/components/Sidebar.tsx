@@ -586,6 +586,8 @@ export default function Sidebar({
 					top: 'var(--space-5)',
 					left: 'var(--space-5)',
 					zIndex: 100,
+					isolation: 'isolate',
+					transform: 'translateZ(0)',
 				}}
 				display={{ initial: 'none', sm: 'block' }}
 			>
