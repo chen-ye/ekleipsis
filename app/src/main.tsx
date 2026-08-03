@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // CESIUM_BASE_URL is defined in vite.config.ts
+import 'cesium/Build/Cesium/Widgets/widgets.css';
 import '@radix-ui/themes/styles.css';
 import { Theme } from '@radix-ui/themes';
 import './index.css';
