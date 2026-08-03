@@ -148,7 +148,7 @@ function EclipseGraph({
 				domain: [startTime, endTime],
 				range: [margin.left, xMax - margin.right],
 			}),
-		[startTime, endTime, xMax],
+		[startTime, endTime, xMax, margin.left, margin.right],
 	);
 
 	const yScale = useMemo(
@@ -157,7 +157,7 @@ function EclipseGraph({
 				domain: [0, maxCoverage || 1],
 				range: [yMax, margin.top],
 			}),
-		[maxCoverage, yMax],
+		[maxCoverage, yMax, margin.top],
 	);
 
 	const handlePointer = useCallback(
@@ -168,7 +168,7 @@ function EclipseGraph({
 			const newDate = xScale.invert(clampedX);
 			onTimeChange(newDate);
 		},
-		[xScale, xMax, onTimeChange],
+		[xScale, xMax, onTimeChange, margin.left, margin.right],
 	);
 
 	const currentX = xScale(currentTime) ?? margin.left;

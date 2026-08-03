@@ -21,7 +21,12 @@ const AVATAR_PROPS = {
 	radius: 'full',
 } as const;
 
-export const LoginWidget = ({ user, onLogin, onLogout, style }: LoginWidgetProps) => {
+export const LoginWidget = ({
+	user,
+	onLogin,
+	onLogout,
+	style,
+}: LoginWidgetProps) => {
 	if (user) {
 		return (
 			<DropdownMenu.Root>

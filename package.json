@@ -1,17 +1,17 @@
 {
-  "name": "ekleipsis",
-  "version": "0.0.0",
-  "private": true,
-  "workspaces": [
-    "app",
-    "extension"
-  ],
-  "scripts": {
-    "dev": "npm run dev -w app",
+	"name": "ekleipsis",
+	"version": "0.0.0",
+	"private": true,
+	"workspaces": [
+		"app",
+		"extension"
+	],
+	"scripts": {
+		"dev": "npm run dev -w app",
 		"lint": "biome check . --fix",
-    "build": "npm run build -w app",
-    "check-types": "npm run build -w app",
-    "dev:extension": "npm run dev -w extension",
-    "build:extension": "npm run build -w extension"
-  }
+		"build": "npm run build -w app",
+		"check-types": "npm run build -w app",
+		"dev:extension": "npm run dev -w extension",
+		"build:extension": "npm run build -w extension"
+	}
 }

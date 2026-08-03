@@ -73,7 +73,6 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		return getEclipseTiming(baseDate, MALLORCA_LAT, MALLORCA_LNG);
 	}, []);
 
-
 	const { startJD, endJD, totalityStartJD, totalityEndJD } = useMemo(() => {
 		if (!eclipseTiming)
 			return { startJD: JulianDate.now(), endJD: JulianDate.now() };
@@ -140,12 +139,10 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		const offsetY = range * Math.cos(sunAzRad + Math.PI);
 		const offsetZ = heightOffset;
 
-
 		const enuMatrix = Transforms.eastNorthUpToFixedFrame(cameraDestination);
 		const offset = new Cartesian3(offsetX, offsetY, offsetZ);
 		const finalDest = new Cartesian3();
 		Matrix4.multiplyByPoint(enuMatrix, offset, finalDest);
-
 
 		// Heading: Look at Sun (sunAzRad)
 		// Pitch: Look somewhat down to see POI context (-20 deg)
@@ -246,7 +243,6 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 				sky.brightnessShift = -1.0 * progress ** 4;
 				return;
 			}
-
 
 			sky.brightnessShift = 0.0;
 		};
