@@ -64,8 +64,8 @@ interface GlobeViewProps {
 
 function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 	const [viewer, setViewer] = useState<CesiumViewer | null>(null);
-	const [show3DTiles, setShow3DTiles] = useState(true);
-	const [showHeatmap, setShowHeatmap] = useState(false);
+	const [show3DTiles, setShow3DTiles] = useState(false);
+	const [showHeatmap, setShowHeatmap] = useState(true);
 
 	// Compute eclipse timing dynamically based on Mallorca location
 	const eclipseTiming = useMemo(() => {
