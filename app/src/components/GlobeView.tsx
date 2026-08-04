@@ -156,11 +156,26 @@ function GlobeView({ cameraDestination, onFlyTo }: GlobeViewProps) {
 		};
 	}, [cameraDestination, eclipseTiming]);
 
-	// Memoize providers to prevent reloading on re-renders
-	const terrainProvider = useMemo(
-		() => CesiumTerrainProvider.fromIonAssetId(1),
-		[],
-	);
+	// Resolve async CesiumTerrainProvider instance into state
+	const [terrainProvider, setTerrainProvider] = useState<
+		CesiumTerrainProvider | undefined
+	>(undefined);
+
+	useEffect(() => {
+		let isMounted = true;
+		CesiumTerrainProvider.fromIonAssetId(1)
+			.then((provider) => {
+				if (isMounted) {
+					setTerrainProvider(provider);
+				}
+			})
+			.catch((err) => {
+				console.error('Failed to load Cesium Ion terrain provider:', err);
+			});
+		return () => {
+			isMounted = false;
+		};
+	}, []);
 
 	const heatmapProvider = useMemo(
 		() =>
